@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { container } from 'tsyringe';
-import { AuthController } from '../../controllers/patients/authController';
+import { AuthController } from '../../controllers/users/authController';
 
 
 const router = Router();

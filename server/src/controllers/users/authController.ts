@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { IAuthService } from '../../interfaces/IAuthService';
-import { success } from 'zod';
 
 @injectable()
 export class AuthController {
