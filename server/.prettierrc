@@ -2,6 +2,17 @@
     "singleQuote": true,
     "semi": false,
     "tabWidth": 4,
-    "useTabs": false
-  }
-  
+    "useTabs": false,
+    "printWidth": 120,
+    "bracketSpacing": true,
+    "arrowParens": "avoid",
+    "trailingComma": "none",
+    "overrides": [
+        {
+            "files": "*.ts",
+            "options": {
+                "parser": "typescript"
+            }
+        }
+    ]
+}
