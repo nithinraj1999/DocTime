@@ -6,7 +6,7 @@ export interface IEmailService {
 }
 
 export class EmailService implements IEmailService {
-  private transporter: Transporter
+  private transporter: Transporter 
 
   constructor() {
     this.transporter = nodemailer.createTransport({
