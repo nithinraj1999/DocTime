@@ -6,8 +6,8 @@
   "redis:start": "docker-compose up -d",
   "redis:stop": "docker-compose down",
   "build": "tsc",
-  "start": "npm run redis:start && node dist/index.js",
-  "dev": "npm run redis:start && ts-node-dev --respawn --transpile-only src/index.ts",
+  "start": "node dist/index.js",
+  "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
   "postinstall": "prisma generate"
 },
   "keywords": [],
