@@ -30,4 +30,15 @@ export class AuthController {
       res.status(500).json({ message: (error as Error).message });
     }
 }
+
+async verifyOtp(req: Request, res: Response): Promise<void> {
+  const { email, otp } = req.body;
+  const isValid = await this.authService.verifyOtp(email, otp);
+  if (isValid) {
+    res.json({ success: true, message: 'OTP verified' });
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid OTP' });
+  }
+}
+
 }

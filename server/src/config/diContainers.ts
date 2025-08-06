@@ -10,6 +10,7 @@ import { ProfileServices } from '../services/user/profileServices';
 import { ProfileController } from '../controllers/users/profileController';
 
 import { EmailService } from '../config/nodeMailer';
+
 container.register<IUserRepository>('IUserRepository', { useClass: UserRepository });
 container.register<IAuthService>('IAuthService', { useClass: AuthService });
 container.register<AuthController>('AuthController', { useClass: AuthController })

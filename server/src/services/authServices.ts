@@ -5,9 +5,13 @@ import bcrypt from 'bcrypt'
 import { IUser } from '../entities/user'
 import crypto from 'crypto'
 import { IEmailService } from '../config/nodeMailer'
+import redis from '../config/redis'
 @injectable()
 export class AuthService implements IAuthService {
-    constructor(@inject('IUserRepository') private userRepo: IUserRepository,@inject("IEmailService") private emailService: IEmailService) {}
+    constructor(
+        @inject('IUserRepository') private userRepo: IUserRepository,
+        @inject('IEmailService') private emailService: IEmailService
+    ) {}
 
     // async signup(
     //     name: string,
@@ -34,37 +38,34 @@ export class AuthService implements IAuthService {
     // }
 
     async signup(
-  name: string,
-  email: string,
-  password: string,
-  phoneNumber: string,
-  confirmPassword: string
-): Promise<void> { 
-  if (password !== confirmPassword) {
-    throw new Error('Passwords do not match')
-  }
+        name: string,
+        email: string,
+        password: string,
+        phoneNumber: string,
+        confirmPassword: string
+    ): Promise<void> {
+        if (password !== confirmPassword) {
+            throw new Error('Passwords do not match')
+        }
 
-  const existingUser = await this.userRepo.findByEmail(email)
-  if (existingUser) {
-    throw new Error('User with this email already exists')
-  }
+        const existingUser = await this.userRepo.findByEmail(email)
+        if (existingUser) {
+            throw new Error('User with this email already exists')
+        }
 
-  const hashedPassword = await bcrypt.hash(password, 10)
-  await this.userRepo.create({
-    name,
-    email,
-    password: hashedPassword,
-    phoneNumber,
-  })
+        const hashedPassword = await bcrypt.hash(password, 10)
+        await this.userRepo.create({
+            name,
+            email,
+            password: hashedPassword,
+            phoneNumber
+        })
 
-  // 🔐 Generate OTP (6 digits)
-  const otp = crypto.randomInt(100000, 999999).toString()
+        const otp = await this.generateAndStoreOtp(email)
 
-  // 📨 Send OTP via Email
-  await this.emailService.sendEmail(email, otp)
+        await this.emailService.sendEmail(email, otp)
 
-  // 💾 (Optional) Store OTP in Redis with expiry
-}
+    }
 
     async signin(email: string, password: string): Promise<IUser> {
         const user = await this.userRepo.findByEmail(email)
@@ -77,4 +78,17 @@ export class AuthService implements IAuthService {
         }
         return user
     }
+
+    async generateAndStoreOtp(phoneNumber: string): Promise<string> {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+        await redis.setex(`otp:${phoneNumber}`, 300, otp) // expires in 5 mins
+        return otp
+    }
+
+    async verifyOtp(phoneNumber: string, otp: string): Promise<boolean> {
+        const storedOtp = await redis.get(`otp:${phoneNumber}`)
+        return storedOtp === otp
+    }
+
+    
 }
