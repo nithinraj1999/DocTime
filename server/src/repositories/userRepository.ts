@@ -2,6 +2,7 @@ import { injectable } from 'tsyringe';
 import { PrismaClient } from '@prisma/client';
 import { IUserRepository } from '../interfaces/IUserRepository';
 import { IUser } from '../entities/user';
+
 export interface ICreateUserDTO {
   name: string;
   email: string;
