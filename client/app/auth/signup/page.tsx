@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Heart, ArrowLeft } from 'lucide-react';
-
+import { signup } from '@/services/api/authServices';
 interface SignupForm {
   name: string;
   email: string;
   password: string;
-  phone: string;
+  confirmPassword:string;
+  phoneNumber: string;
 }
 
 export default function Signup() {
@@ -28,10 +29,19 @@ export default function Signup() {
   } = useForm<SignupForm>();
 
   const onSubmit = async (data: SignupForm) => {
+    console.log("......",data);
+    
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log('Signup data:', data);
-    router.push(`/verify-otp?phone=${data.phone}&email=${data.email}`);
+
+  const response = await signup(data)
+    console.log("response",response);
+    
+if(response.success){
+    router.push(`/auth/verify-otp`);
+
+}
+      
+
     setIsLoading(false);
   };
 
@@ -108,17 +118,17 @@ export default function Signup() {
                     id="phone"
                     type="tel"
                     placeholder="Enter your phone number"
-                    {...register('phone', {
+                    {...register('phoneNumber', {
                       required: 'Phone number is required',
                       pattern: {
                         value: /^[+]?[\d\s\-()]{10,}$/,
                         message: 'Invalid phone number',
                       },
                     })}
-                    className={errors.phone ? 'border-destructive' : ''}
+                    className={errors.phoneNumber ? 'border-destructive' : ''}
                   />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone.message}</p>
+                  {errors.phoneNumber && (
+                    <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
                   )}
                 </div>
 
@@ -143,7 +153,22 @@ export default function Signup() {
                     <p className="text-sm text-destructive">{errors.password.message}</p>
                   )}
                 </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="password">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Re type your password"
+                    {...register('confirmPassword', {
+                      required: 'Confirm Password is required',
+                      minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                    })}
+                    className={errors.password ? 'border-destructive' : ''}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password.message}</p>
+                  )}
+                </div>
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-primary/90"

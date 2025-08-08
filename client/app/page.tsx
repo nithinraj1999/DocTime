@@ -27,10 +27,10 @@ export default function HomePage() {
             <Link href="/doctor/login" passHref>
               <Button variant="ghost" className="text-foreground">Doctor Portal</Button>
             </Link>
-            <Link href="/login" passHref>
+            <Link href="/auth/login" passHref>
               <Button variant="ghost" className="text-foreground">Login</Button>
             </Link>
-            <Link href="/signup" passHref>
+            <Link href="/auth/signup" passHref>
               <Button className="bg-primary hover:bg-primary/90">Get Started</Button>
             </Link>
           </div>
