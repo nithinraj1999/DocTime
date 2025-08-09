@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { inject, injectable } from 'tsyringe'
 import { IAuthService } from '../../interfaces/IAuthService'
 import jwt from 'jsonwebtoken';
+import { success } from 'zod';
 
 @injectable()
 export class AuthController {
@@ -11,9 +12,10 @@ export class AuthController {
         try {
             const { name, email, password, phoneNumber, confirmPassword } = req.body
             await this.authService.signup(name, email, password, phoneNumber, confirmPassword)
-            res.status(201).json({ message: 'User registered successfully' })
+            res.status(201).json({success: true, message: 'User registered successfully' })
         } catch (error) {
-            res.status(500).json({ message: (error as Error).message })
+            console.log(error);
+            res.status(500).json({success:true, message: (error as Error).message })
         }
     }
  
