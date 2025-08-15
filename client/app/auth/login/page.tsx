@@ -1,14 +1,22 @@
-'use client'; 
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Heart, ArrowLeft } from 'lucide-react';
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Heart, ArrowLeft } from "lucide-react";
+import { login } from "@/services/api/authServices";
+import toast from "react-hot-toast";
 
 interface LoginForm {
   email: string;
@@ -26,11 +34,22 @@ export default function LoginPage() {
   } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log('Login data:', data);
-    router.push('/dashboard');  
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+
+      const response = await login(data);
+      if (response.success) {
+        toast.success("Login successful! Redirecting...");
+
+        router.push("/dashboard");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Login failed. Please try again.");
+
+      throw error;
+    }
   };
 
   return (
@@ -42,7 +61,9 @@ export default function LoginPage() {
             <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-xl">
               <Heart className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-foreground">HealthCare+</span>
+            <span className="text-xl font-bold text-foreground">
+              HealthCare+
+            </span>
           </Link>
           <Link href="/">
             <Button variant="ghost" className="text-foreground">
@@ -59,7 +80,9 @@ export default function LoginPage() {
           <Card className="border-primary/20">
             <CardHeader className="text-center space-y-2">
               <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-              <CardDescription>Sign in to your HealthCare+ account</CardDescription>
+              <CardDescription>
+                Sign in to your HealthCare+ account
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -70,17 +93,19 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    {...register('email', {
-                      required: 'Email is required',
+                    {...register("email", {
+                      required: "Email is required",
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Invalid email address',
+                        message: "Invalid email address",
                       },
                     })}
-                    className={errors.email ? 'border-destructive' : ''}
+                    className={errors.email ? "border-destructive" : ""}
                   />
                   {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
 
@@ -88,7 +113,10 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-sm text-primary hover:underline">
+                    <a
+                      href="#"
+                      className="text-sm text-primary hover:underline"
+                    >
                       Forgot password?
                     </a>
                   </div>
@@ -96,13 +124,15 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    {...register('password', {
-                      required: 'Password is required',
+                    {...register("password", {
+                      required: "Password is required",
                     })}
-                    className={errors.password ? 'border-destructive' : ''}
+                    className={errors.password ? "border-destructive" : ""}
                   />
                   {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
 
@@ -112,15 +142,18 @@ export default function LoginPage() {
                   className="w-full bg-primary hover:bg-primary/90"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
 
               {/* Create account */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Don&apos;t have an account?{' '}
-                  <Link href="/auth/signup" className="text-primary hover:underline font-medium">
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/auth/signup"
+                    className="text-primary hover:underline font-medium"
+                  >
                     Create one here
                   </Link>
                 </p>
@@ -133,7 +166,9 @@ export default function LoginPage() {
                     <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -160,7 +195,11 @@ export default function LoginPage() {
                   </Button>
                   <Button variant="outline" className="w-full">
                     {/* Facebook Icon */}
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
                     Facebook
