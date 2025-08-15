@@ -19,7 +19,7 @@ export class AuthService implements IAuthService {
         password: string,
         phoneNumber: string,
         confirmPassword: string
-    ): Promise<void> {
+    ): Promise<IUser> {
         if (password !== confirmPassword) {
             throw new Error('Passwords do not match')
         }
@@ -30,7 +30,7 @@ export class AuthService implements IAuthService {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
-        await this.userRepo.create({
+        const user = await this.userRepo.create({
             name,
             email,
             password: hashedPassword,
@@ -40,6 +40,7 @@ export class AuthService implements IAuthService {
         const otp = await this.generateAndStoreOtp(email)
 
         await this.emailService.sendEmail(email, otp)
+        return user
     }
 
     async signin(email: string, password: string): Promise<IUser> {
@@ -54,14 +55,19 @@ export class AuthService implements IAuthService {
         return user
     }
 
-    async generateAndStoreOtp(phoneNumber: string): Promise<string> {
+    async generateAndStoreOtp(email: string): Promise<string> {
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
-        await redis.setex(`otp:${phoneNumber}`, 300, otp)
+        console.log("otp ---",otp);
+        
+        await redis.setex(`otp:${email}`, 300, otp)
         return otp
     }
-
-    async verifyOtp(phoneNumber: string, otp: string): Promise<boolean> {
-        const storedOtp = await redis.get(`otp:${phoneNumber}`)
+  
+    async verifyOtp(email: string, otp: string): Promise<boolean> {
+        console.log(email)
+        const storedOtp = await redis.get(`otp:${email}`)
+        console.log(storedOtp);
+        
         return storedOtp === otp
     }
 
@@ -70,10 +76,14 @@ export class AuthService implements IAuthService {
         if (!user) {
             throw new Error('User with this phone number does not exist')
         }
+        console.log("email",email);
+        
         await redis.del(`otp:${email}`)
 
         const otp = await this.generateAndStoreOtp(email)
 
         await this.emailService.sendEmail(user.email, otp)
     }
+
 }
+ 

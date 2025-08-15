@@ -13,8 +13,13 @@ app.use(express.json())
 
 const PORT = process.env.PORT 
 
-app.use(cors())
-
+app.use(
+    cors({
+        origin: process.env.FRONTEND_ORIGIN,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+        credentials: true,
+    }) 
+)
 app.use('/api/auth', authRoutes);
 app.use('/api/',profileRoutes);
 app.use('/api/doctor',doctorProfileRoutes);

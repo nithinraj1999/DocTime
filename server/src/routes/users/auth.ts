@@ -7,11 +7,11 @@ const router = Router();
 const authController = container.resolve<AuthController>('AuthController')
 
 router.post('/signup', (req, res) => authController.signup(req, res));
-router.post('/signin', (req, res) => authController.signin(req, res));
-router.post('/verify', (req, res) => authController.verifyOtp(req, res));
+router.post('/login', (req, res) => authController.signin(req, res));
+router.post('/verify-otp', (req, res) => authController.verifyOtp(req, res));
 router.post('/resend-otp', (req, res) => authController.resendOTP(req, res));
-
-
+  
+ 
 
 
 export default router;

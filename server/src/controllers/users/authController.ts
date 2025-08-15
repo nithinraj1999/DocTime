@@ -10,13 +10,14 @@ export class AuthController {
     async signup(req: Request, res: Response): Promise<void> {
         try {
             const { name, email, password, phoneNumber, confirmPassword } = req.body
-            await this.authService.signup(name, email, password, phoneNumber, confirmPassword)
-            res.status(201).json({success: true, message: 'User registered successfully' })
+            const userData = await this.authService.signup(name, email, password, phoneNumber, confirmPassword)
+            
+            res.status(201).json({success: true, message: 'User registered successfully',email:email })
         } catch (error) {
             console.log(error);
             res.status(500).json({success:true, message: (error as Error).message })
         }
-    }
+    } 
  
     async signin(req: Request, res: Response): Promise<void> {
         try {
@@ -43,7 +44,11 @@ export class AuthController {
     }
 
     async verifyOtp(req: Request, res: Response): Promise<void> {
+        console.log("verify otp controller ",req.body);
+        
         const { email, otp } = req.body
+        console.log(otp);
+        
         const isValid = await this.authService.verifyOtp(email, otp)
         if (isValid) {
             res.json({ success: true, message: 'OTP verified' })
