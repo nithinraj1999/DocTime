@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Heart, ArrowLeft } from 'lucide-react';
 import { signup } from '@/services/api/authServices';
+import { useAuthStore } from '@/store/userAuthStore';
 interface SignupForm {
   name: string;
   email: string;
@@ -27,19 +28,21 @@ export default function Signup() {
     handleSubmit,
     formState: { errors },
   } = useForm<SignupForm>();
+const setEmail = useAuthStore((state) => state.setEmail);
 
   const onSubmit = async (data: SignupForm) => {
     console.log("......",data);
     
-    setIsLoading(true);
+    // setIsLoading(true);
 
   const response = await signup(data)
     console.log("response",response);
+    console.log(response);
     
 if(response.success){
+  setEmail(response.email)
     router.push(`/auth/verify-otp`);
-
-}
+} 
       
 
     setIsLoading(false);
