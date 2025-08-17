@@ -1,3 +1,5 @@
+import { Patient } from "./patiant"
+
 export interface IUser {
     id: string
     name: string
@@ -8,6 +10,7 @@ export interface IUser {
     isAdmin: boolean
     status: 'ACTIVE' | 'BLOCKED'
     isVerified: boolean
+    patient?: Patient
     createdAt: Date
     updatedAt: Date
 }

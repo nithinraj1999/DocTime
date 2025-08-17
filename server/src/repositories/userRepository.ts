@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { IUserRepository } from '../interfaces/IUserRepository'
 import { IUser } from '../entities/user'
 
@@ -8,7 +8,7 @@ export interface ICreateUserDTO {
     email: string
     password: string
     phoneNumber: string
-    profileImage:null
+    profileImage: null
 }
 
 @injectable()
@@ -26,7 +26,7 @@ export class UserRepository implements IUserRepository {
                 email: user.email,
                 password: user.password,
                 phoneNumber: user.phoneNumber,
-                profileImage:user.profileImage || null,
+                profileImage: user.profileImage || null
             }
         })
         return newUser
@@ -46,24 +46,51 @@ export class UserRepository implements IUserRepository {
         return user
     }
 
-    async updateProfile(id: string, data: Partial<IUser>): Promise<Partial<IUser>> {
+    async updateProfile(id: string, data: Partial<IUser>): Promise<IUser> {
+        const { patient, ...rest } = data
+
+        const updateData: Prisma.UserUpdateInput = {
+            ...rest,
+            ...(patient && {
+                patient: {
+                    update: {
+                        ...patient
+                    }
+                }
+            })
+        }
+
         const updatedUser = await this.prisma.user.update({
             where: { id },
-            data
+            data: updateData,
+            include: { patient: true } 
         })
-        console.log('Updated User:', updatedUser)
 
-        return updatedUser
+        return updatedUser as unknown as IUser 
     }
 
     async updateProfileByEmail(email: string, data: Partial<IUser>): Promise<Partial<IUser>> {
+        const { patient, ...rest } = data
+
+        const updateData: Prisma.UserUpdateInput = {
+            ...rest,
+            ...(patient && {
+                patient: {
+                    update: {
+                        ...patient
+                    }
+                }
+            })
+        }
+
         const updatedUser = await this.prisma.user.update({
             where: { email },
-            data
+            data: updateData,
+            include: { patient: true }
         })
         console.log('Updated User:', updatedUser)
 
-        return updatedUser
+        return updatedUser as unknown as IUser
     }
 
     async getAllUsers(): Promise<IUser[]> {

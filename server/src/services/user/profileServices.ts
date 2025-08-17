@@ -9,13 +9,14 @@ export class ProfileServices implements IProfileServices {
     @inject('IUserRepository') private userRepository: IUserRepository
   ) {}
 
-  async updateProfile(id: string, data: Partial<IUser>): Promise<IUser> {
+  async updateProfile(id: string, data: Partial<IUser>): Promise<Partial<IUser>> {
     const user = await this.userRepository.findById(id);
     if (!user) throw new Error('User not found');
+    
     return await this.userRepository.updateProfile(id, data);
   }
 
-  async getProfile(id: string): Promise<IUser | null> {
+  async getProfile(id: string): Promise<Partial<IUser> | null> {
     return this.userRepository.findById(id);
   }
 }
