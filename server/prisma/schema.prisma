@@ -24,9 +24,43 @@ model User {
   isAdmin      Boolean    @default(false)  
   isVerified   Boolean  @default(false)
   status       UserStatus @default(ACTIVE)
+  patient      Patient[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }   
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodGroup {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+}
+
+model Patient {
+  id              String        @id @default(uuid())
+  name            String
+  userId          String        
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth     DateTime
+  gender          Gender
+  bloodGroup      BloodGroup?
+  address         String?
+  phoneNumber     String?
+  emergencyContact String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
 
 
 model Doctor {
@@ -38,7 +72,8 @@ model Doctor {
   email            String              @unique
   profileImage     String
   bio              String
-  isVerified       Boolean   @default(false) 
+  isVerified       Boolean      @default(false) 
+  status           UserStatus   @default(ACTIVE)
   // Arrays
   languages        String[]            @default([]) 
   specializations  String[]            @default([])
