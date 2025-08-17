@@ -6,6 +6,8 @@ import profileRoutes from './routes/users/profileRoutes';
 import cors from 'cors'
 import dotenv from 'dotenv'
 import doctorProfileRoutes from './routes/doctors/profileRoutes'
+import DoctorAuthRoutes from './routes/doctors/authRoutes'
+import AdminAuthRoutes from './routes/admin/adminAuth';
 dotenv.config()
 
 const app = express()
@@ -23,7 +25,8 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/',profileRoutes);
 app.use('/api/doctor',doctorProfileRoutes);
-
+app.use('/api/doctor/auth',DoctorAuthRoutes);
+app.use('/api/admin/auth',AdminAuthRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Server listening on http://localhost:${PORT}`)

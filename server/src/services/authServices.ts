@@ -19,12 +19,12 @@ export class AuthService implements IAuthService {
         password: string,
         phoneNumber: string,
         confirmPassword: string
-    ): Promise<IUser> {
+    ): Promise<Partial<IUser>> {
         if (password !== confirmPassword) {
             throw new Error('Passwords do not match')
         }
 
-        const existingUser = await this.userRepo.findByEmail(email)
+        const existingUser = await this.userRepo.findByEmail(email, false)
         if (existingUser) {
             throw new Error('User with this email already exists')
         }
@@ -43,16 +43,20 @@ export class AuthService implements IAuthService {
         return user
     }
 
-    async signin(email: string, password: string): Promise<IUser> {
-        const user = await this.userRepo.findByEmail(email)
+    async signin(email: string, password: string): Promise<Partial<IUser> |null> {
+        const user = await this.userRepo.findByEmail(email,false)
         if (!user) {
             throw new Error('User not found')
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password)
+        if(user.password){
+const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
             throw new Error('Invalid password')
         }
         return user
+        }
+
+        return null
     }
 
     async generateAndStoreOtp(email: string): Promise<string> {
@@ -66,13 +70,15 @@ export class AuthService implements IAuthService {
     async verifyOtp(email: string, otp: string): Promise<boolean> {
         console.log(email)
         const storedOtp = await redis.get(`otp:${email}`)
-        console.log(storedOtp);
-        
+        console.log(storedOtp)
+        if (storedOtp === otp) {
+            await this.userRepo.updateProfileByEmail(email, { isVerified: true })
+        }
         return storedOtp === otp
     }
 
     async resendOtp(email: string): Promise<void> {
-        const user = await this.userRepo.findByEmail(email)
+        const user = await this.userRepo.findByEmail(email,false)
         if (!user) {
             throw new Error('User with this phone number does not exist')
         }
@@ -81,8 +87,9 @@ export class AuthService implements IAuthService {
         await redis.del(`otp:${email}`)
 
         const otp = await this.generateAndStoreOtp(email)
-
-        await this.emailService.sendEmail(user.email, otp)
+        if (user.email) {
+            await this.emailService.sendEmail(user.email, otp)
+        }
     }
 
 }

@@ -17,6 +17,14 @@ import { DoctorProfileService } from '../services/doctor/profileServices';
 import { DoctorProfileController } from '../controllers/doctors/profileController';
 import { IDoctorRepository } from '../interfaces/IDoctorRepository';
 import { DoctorRepository } from '../repositories/doctorRepostitory';
+
+import { IDoctorAuthService } from '../interfaces/IDoctorAuthService';
+import { DoctorAuthController } from '../controllers/doctors/authController';
+import { DoctorAuthService } from '../services/doctor/authServices';
+
+import { IAdminAuthService } from '../interfaces/IAdminAuthServices';
+import { AdminAuthService } from '../services/admin/adminAuthServices';
+import { AdminAuthController } from '../controllers/admin/adminAuthController';
 container.register<IUserRepository>('IUserRepository', { useClass: UserRepository });
 container.register<IAuthService>('IAuthService', { useClass: AuthService });
 container.register<AuthController>('AuthController', { useClass: AuthController })
@@ -29,6 +37,9 @@ container.register<ProfileController>('ProfileController', { useClass: ProfileCo
 container.register<EmailService>('IEmailService', { useClass: EmailService });
 
 
+container.register<IDoctorAuthService>('IDoctorAuthService', { useClass: DoctorAuthService });
+container.register<DoctorAuthController>('DoctorAuthController', { useClass: DoctorAuthController });
+
 container.register<IDoctorRepository>('IDoctorRepository', { useClass: DoctorRepository });
 
 
@@ -39,3 +50,10 @@ container.register<DoctorProfileController>("DoctorProfileController", {
   useClass: DoctorProfileController,
 });
 
+
+
+
+
+container.register<IAdminAuthService>('IAdminAuthService', { useClass: AdminAuthService });
+container.register<AdminAuthController>('AdminAuthController', { useClass: AdminAuthController })
+ 
