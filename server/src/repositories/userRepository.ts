@@ -8,6 +8,7 @@ export interface ICreateUserDTO {
     email: string
     password: string
     phoneNumber: string
+    profileImage:null
 }
 
 @injectable()
@@ -24,7 +25,8 @@ export class UserRepository implements IUserRepository {
                 name: user.name,
                 email: user.email,
                 password: user.password,
-                phoneNumber: user.phoneNumber
+                phoneNumber: user.phoneNumber,
+                profileImage:user.profileImage || null,
             }
         })
         return newUser

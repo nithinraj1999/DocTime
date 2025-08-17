@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import doctorProfileRoutes from './routes/doctors/profileRoutes'
 import DoctorAuthRoutes from './routes/doctors/authRoutes'
 import AdminAuthRoutes from './routes/admin/adminAuth';
+import UserMgtRoutes from './routes/admin/userMgtRoutes';
 dotenv.config()
 
 const app = express()
@@ -27,7 +28,7 @@ app.use('/api/',profileRoutes);
 app.use('/api/doctor',doctorProfileRoutes);
 app.use('/api/doctor/auth',DoctorAuthRoutes);
 app.use('/api/admin/auth',AdminAuthRoutes);
-
+app.use('/api/admin/user-mgt',UserMgtRoutes);
 app.listen(PORT, () => {
   console.log(`✅ Server listening on http://localhost:${PORT}`)
 })

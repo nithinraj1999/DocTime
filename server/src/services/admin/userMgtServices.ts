@@ -8,7 +8,7 @@ import { IUserMgtService } from '../../interfaces/IUserMgtServices'
 export class UserMgtService implements IUserMgtService {
     constructor(@inject('IUserRepository') private userRepo: IUserRepository) {}
 
-    async createNewUser(userData: Partial<IUser>): Promise<Partial<IUser>> {
+    async createNewUser(userData: Partial<IUser>): Promise<Partial<IUser>|null> {
         if (!userData.email || !userData.password) {
             throw new Error('Email and password are required')
         }
@@ -17,7 +17,11 @@ export class UserMgtService implements IUserMgtService {
             ...userData,
             password: hashedPassword
         })
-        return newUser
+        let verifiedUser = null
+        if(newUser && newUser.id){
+            verifiedUser = this.updateUser(newUser.id, {isVerified:true})
+        }
+        return verifiedUser
     }
     async updateUser(id: string, userData: Partial<IUser>): Promise<Partial<IUser>> {
         if (userData.password) {

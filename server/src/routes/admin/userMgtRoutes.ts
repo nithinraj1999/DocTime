@@ -12,3 +12,4 @@ router.get('/users', (req, res) => userMgtController.getAllUsers(req, res));
 
 
 export default router;
+ 

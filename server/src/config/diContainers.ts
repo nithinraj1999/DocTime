@@ -25,6 +25,10 @@ import { DoctorAuthService } from '../services/doctor/authServices';
 import { IAdminAuthService } from '../interfaces/IAdminAuthServices';
 import { AdminAuthService } from '../services/admin/adminAuthServices';
 import { AdminAuthController } from '../controllers/admin/adminAuthController';
+
+import { IUserMgtService } from '../interfaces/IUserMgtServices';
+import { UserMgtService } from '../services/admin/userMgtServices';
+import { AdminUserMgtController } from '../controllers/admin/userMgtController';
 container.register<IUserRepository>('IUserRepository', { useClass: UserRepository });
 container.register<IAuthService>('IAuthService', { useClass: AuthService });
 container.register<AuthController>('AuthController', { useClass: AuthController })
@@ -57,3 +61,8 @@ container.register<DoctorProfileController>("DoctorProfileController", {
 container.register<IAdminAuthService>('IAdminAuthService', { useClass: AdminAuthService });
 container.register<AdminAuthController>('AdminAuthController', { useClass: AdminAuthController })
  
+
+
+
+container.register<IUserMgtService>('IUserMgtService', { useClass: UserMgtService });
+container.register<AdminUserMgtController>('AdminUserMgtController', { useClass: AdminUserMgtController })

@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe'
 import { IUserMgtService } from '../../interfaces/IUserMgtServices'
 @injectable()
 export class AdminUserMgtController {
-    constructor( @inject('UserMgtService') private userMgtService: IUserMgtService) {}
+    constructor( @inject('IUserMgtService') private userMgtService: IUserMgtService) {}
 
     async createUser(req: Request, res: Response): Promise<void> {
         try {
