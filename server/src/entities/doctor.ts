@@ -7,7 +7,7 @@ export interface IDoctor {
   email: string;
   profileImage: string;
   bio: string;
-
+  status: 'ACTIVE' | 'BLOCKED';
   languages: string[];
   specializations: string[];
   expertiseAreas: string[];

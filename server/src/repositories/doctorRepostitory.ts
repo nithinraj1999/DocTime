@@ -11,6 +11,7 @@ export interface ICreateDoctorProfileDTO {
     expertiseAreas: string[]
     education: any // JSON
     experience: any // JSON
+    status: 'ACTIVE' | 'BLOCKED'
     clinics: {
         clinicName: string
         address: string
@@ -76,9 +77,7 @@ export class DoctorRepository implements IDoctorRepository {
     async findById(id: string): Promise<{ id: string } | null> {
         return this.prisma.doctor.findUnique({
             where: { id },
-            select: {
-                id: true
-            }
+            
         })
     }
     async findByEmail(email: string): Promise<IDoctor | null> {
@@ -90,7 +89,6 @@ export class DoctorRepository implements IDoctorRepository {
     async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
         const updateData: Prisma.DoctorUpdateInput = {}
 
-        // Simple scalar fields
         if (data.fullName !== undefined) updateData.fullName = data.fullName
         if (data.gender !== undefined) updateData.gender = data.gender
         if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
@@ -102,7 +100,7 @@ export class DoctorRepository implements IDoctorRepository {
         if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas
         if (data.education !== undefined) updateData.education = data.education
         if (data.experience !== undefined) updateData.experience = data.experience
-
+        if (data.status !== undefined) updateData.status = data.status
         if (data.clinics !== undefined) {
             updateData.clinics = {
                 deleteMany: {},
@@ -127,4 +125,9 @@ export class DoctorRepository implements IDoctorRepository {
             data: updateData
         })
     }
+
+    async getAllDoctors(): Promise<IDoctor[]> {
+        return this.prisma.doctor.findMany()
+    }
+
 }

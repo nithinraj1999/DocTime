@@ -38,4 +38,5 @@ export interface IDoctorRepository {
     findById(id: string): Promise<{ id: string } | null>
     findByEmail(email: string): Promise<IDoctor | null>
     updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>
+    getAllDoctors(): Promise<IDoctor[]>
 }
