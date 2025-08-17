@@ -9,8 +9,10 @@ import { container } from 'tsyringe';
 const router = Router();
 const profileController = container.resolve<DoctorProfileController>('DoctorProfileController');
 
+
+
 router.post('/profile', (req, res) => profileController.createDoctorProfile(req, res));
-router.post('/profile/:id', (req, res) => profileController.updateDoctorProfile(req, res));
+router.put('/profile/:id', (req, res) => profileController.updateDoctorProfile(req, res));
 
 
 

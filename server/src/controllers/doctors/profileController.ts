@@ -12,9 +12,6 @@ export class DoctorProfileController {
     async createDoctorProfile(req: Request, res: Response): Promise<void> {
         try {
             const doctorData = req.body
-
-            console.log('Creating new doctor profile:', doctorData)
-
             const newDoctor = await this.doctorProfileService.createDoctorProfile(doctorData)
 
             res.status(201).json({

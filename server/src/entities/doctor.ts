@@ -1,9 +1,8 @@
 export interface IDoctor {
   id: string;
-  userId: string;
   fullName: string;
   gender: string;
-  dateOfBirth: Date;
+  password:string
   phoneNumber: string;
   email: string;
   profileImage: string;

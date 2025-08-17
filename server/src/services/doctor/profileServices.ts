@@ -5,6 +5,8 @@ import { IDoctorRepository } from '../../interfaces/IDoctorRepository'
 export interface ICreateDoctorProfileDTO {
     userId: string
     fullName: string
+    password: string
+    confirmPassword: string
     gender: string
     dateOfBirth: Date
     phoneNumber: string
@@ -42,6 +44,8 @@ export class DoctorProfileService implements IDoctorProfileServices {
     constructor(@inject('IDoctorRepository') private doctorRepository: IDoctorRepository) {}
 
     async createDoctorProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor> {
+        const {password,confirmPassword} = data
+        if(password !== confirmPassword) throw new Error('Passwords do not match')
         return this.doctorRepository.createProfile(data)
     }
     async updateProfile(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {

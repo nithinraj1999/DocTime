@@ -1,9 +1,8 @@
 import { IDoctor } from '../entities/doctor'
 export interface ICreateDoctorProfileDTO {
-    userId: string
     fullName: string
     gender: string
-    dateOfBirth: Date
+    password: string
     phoneNumber: string
     email: string
     profileImage: string
@@ -37,5 +36,6 @@ export interface ICreateDoctorProfileDTO {
 export interface IDoctorRepository {
     createProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor>
     findById(id: string): Promise<{ id: string } | null>
+    findByEmail(email: string): Promise<IDoctor | null>
     updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>
 }

@@ -1,8 +1,7 @@
 export interface ICreateDoctorProfileDTO {
-    userId: string
     fullName: string
     gender: string
-    dateOfBirth: Date
+    password: string
     phoneNumber: string
     email: string
     profileImage: string
@@ -33,21 +32,24 @@ export interface ICreateDoctorProfileDTO {
     }[]
 }
 
-import { PrismaClient,Prisma  } from '@prisma/client'
+import { PrismaClient, Prisma, Doctor } from '@prisma/client'
 import { injectable } from 'tsyringe'
 import { IDoctor } from '../entities/doctor'
 import { IDoctorRepository } from '../interfaces/IDoctorRepository'
+import bcrypt from 'bcrypt'
+
 @injectable()
 export class DoctorRepository implements IDoctorRepository {
     private readonly prisma = new PrismaClient()
 
     async createProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor> {
+        const hashedPassword = await bcrypt.hash(data.password, 10)
+
         const doctor = await this.prisma.doctor.create({
             data: {
-                userId: data.userId,
                 fullName: data.fullName,
                 gender: data.gender,
-                dateOfBirth: data.dateOfBirth,
+                password: hashedPassword,
                 phoneNumber: data.phoneNumber,
                 email: data.email,
                 profileImage: data.profileImage,
@@ -79,17 +81,18 @@ export class DoctorRepository implements IDoctorRepository {
             }
         })
     }
+    async findByEmail(email: string): Promise<IDoctor | null> {
+        return this.prisma.doctor.findUnique({
+            where: { email }
+        })
+    }
 
-    async updateDoctor(
-        id: string,
-        data: Partial<ICreateDoctorProfileDTO>
-    ): Promise<IDoctor> {
+    async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
         const updateData: Prisma.DoctorUpdateInput = {}
 
         // Simple scalar fields
         if (data.fullName !== undefined) updateData.fullName = data.fullName
         if (data.gender !== undefined) updateData.gender = data.gender
-        if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth
         if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
         if (data.email !== undefined) updateData.email = data.email
         if (data.profileImage !== undefined) updateData.profileImage = data.profileImage

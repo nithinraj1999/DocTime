@@ -17,8 +17,11 @@ import React from "react";
 
 interface DoctorProfileForm {
   name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
   profilePhoto?: string;
-  gender?: string;
+  gender: string;
   languages: string[];
   mainSpecialty: string;
   subSpecialties: string[];
@@ -60,7 +63,17 @@ export default function DoctorProfileCreate() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch, getValues } = useForm<DoctorProfileForm>({
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    setValue, 
+    watch, 
+    getValues,
+    trigger,
+    setError,
+    clearErrors
+  } = useForm<DoctorProfileForm>({
     defaultValues: {
       languages: [],
       subSpecialties: [],
@@ -70,21 +83,93 @@ export default function DoctorProfileCreate() {
       availableDays: [],
       timeSlots: [],
       consultationType: [],
+      gender: "",
+      mainSpecialty: "",
+      graduationYear: "",
+      yearsExperience: ""
     },
   });
 
   const watchedValues = watch();
 
   const onSubmit = async (data: DoctorProfileForm) => {
+    console.log("data...", data);
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log("Doctor profile data:", data);
-    router.push("/doctor/dashboard");
+    // router.push("/doctor/dashboard");
     setIsLoading(false);
   };
 
-    const nextStep = () => {
-    if (currentStep < 7) {
+  const validateArrayField = (field: keyof DoctorProfileForm, minLength = 1) => {
+    const value = getValues(field);
+    if (!value || value.length < minLength) {
+      setError(field, {
+        type: "minLength",
+        message: `At least ${minLength} selection is required`
+      });
+      return false;
+    }
+    clearErrors(field);
+    return true;
+  };
+
+  const validateSelectField = (field: keyof DoctorProfileForm) => {
+    const value = getValues(field);
+    if (!value || value === "") {
+      setError(field, {
+        type: "required",
+        message: "This field is required"
+      });
+      return false;
+    }
+    clearErrors(field);
+    return true;
+  };
+
+  const validateCurrentStep = async () => {
+    let isValid = true;
+    
+    switch (currentStep) {
+      case 1:
+        isValid = await trigger(["name", "email", "password", "confirmPassword"]);
+        isValid = validateArrayField("languages") && isValid;
+        isValid = validateSelectField("gender") && isValid;
+        break;
+      case 2:
+        isValid = validateSelectField("mainSpecialty") && isValid;
+        isValid = validateArrayField("subSpecialties") && isValid;
+        break;
+      case 3:
+        isValid = await trigger(["university"]);
+        isValid = validateArrayField("degrees") && isValid;
+        isValid = validateSelectField("graduationYear") && isValid;
+        break;
+      case 4:
+        isValid = validateSelectField("yearsExperience") && isValid;
+        isValid = await trigger(["currentWorkplace", "pastWorkplaces"]);
+        break;
+      case 5:
+        isValid = await trigger(["clinicName", "address"]);
+        break;
+      case 6:
+        isValid = validateArrayField("availableDays") && isValid;
+        isValid = validateArrayField("timeSlots") && isValid;
+        isValid = validateArrayField("consultationType") && isValid;
+        break;
+      case 7:
+        isValid = await trigger(["onlineFee", "inPersonFee", "followUpFee"]);
+        break;
+      default:
+        isValid = false;
+    }
+    
+    return isValid;
+  };
+
+  const nextStep = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid && currentStep < 7) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -95,21 +180,27 @@ export default function DoctorProfileCreate() {
     }
   };
 
-    const handleArrayField = (field: keyof DoctorProfileForm, value: string, checked: boolean) => {
+  const handleArrayField = (field: keyof DoctorProfileForm, value: string, checked: boolean) => {
     const currentValues = getValues(field) as string[] || [];
     if (checked) {
       setValue(field, [...currentValues, value] as any);
     } else {
       setValue(field, currentValues.filter(item => item !== value) as any);
     }
+    validateArrayField(field);
+  };
+
+  const handleSelectChange = (field: keyof DoctorProfileForm, value: string) => {
+    setValue(field, value);
+    validateSelectField(field);
   };
 
   const renderStepContent = () => {
-    
     switch (currentStep) {
       case 1: // Basic Info
         return (
           <div className="space-y-6">
+            {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
               <Input
@@ -121,6 +212,64 @@ export default function DoctorProfileCreate() {
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Enter a valid email",
+                  },
+                })}
+                className={errors.email ? "border-destructive" : ""}
+              />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password *</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="password"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                })}
+                className={errors.password ? "border-destructive" : ""}
+              />
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="re-enter password"
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  validate: (value) =>
+                    value === watch("password") || "Passwords do not match",
+                })}
+                className={errors.confirmPassword ? "border-destructive" : ""}
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            {/* Profile Photo */}
             <div className="space-y-2">
               <Label>Profile Photo</Label>
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
@@ -130,9 +279,13 @@ export default function DoctorProfileCreate() {
               </div>
             </div>
 
+            {/* Gender */}
             <div className="space-y-2">
-              <Label>Gender (Optional)</Label>
-              <RadioGroup onValueChange={(value) => setValue("gender", value)}>
+              <Label>Gender *</Label>
+              <RadioGroup 
+                onValueChange={(value: string) => handleSelectChange("gender", value)}
+                value={watchedValues.gender}
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="male" id="male" />
                   <Label htmlFor="male">Male</Label>
@@ -146,22 +299,27 @@ export default function DoctorProfileCreate() {
                   <Label htmlFor="other">Other</Label>
                 </div>
               </RadioGroup>
+              {errors.gender && <p className="text-sm text-destructive">{errors.gender.message}</p>}
             </div>
 
+            {/* Languages */}
             <div className="space-y-2">
-              <Label>Languages Spoken</Label>
+              <Label>Languages Spoken *</Label>
               <div className="grid grid-cols-2 gap-2">
                 {languages.map((language) => (
                   <div key={language} className="flex items-center space-x-2">
                     <Checkbox
                       id={language}
                       checked={watchedValues.languages?.includes(language)}
-                      onCheckedChange={(checked) => handleArrayField("languages", language, checked as boolean)}
+                      onCheckedChange={(checked: boolean) =>
+                        handleArrayField("languages", language, checked as boolean)
+                      }
                     />
                     <Label htmlFor={language}>{language}</Label>
                   </div>
                 ))}
               </div>
+              {errors.languages && <p className="text-sm text-destructive">{errors.languages.message}</p>}
             </div>
           </div>
         );
@@ -171,8 +329,11 @@ export default function DoctorProfileCreate() {
           <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="mainSpecialty">Main Specialty *</Label>
-              <Select onValueChange={(value) => setValue("mainSpecialty", value)}>
-                <SelectTrigger>
+              <Select 
+                onValueChange={(value:string) => handleSelectChange("mainSpecialty", value)}
+                value={watchedValues.mainSpecialty}
+              >
+                <SelectTrigger className={errors.mainSpecialty ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select your primary specialty" />
                 </SelectTrigger>
                 <SelectContent>
@@ -181,22 +342,24 @@ export default function DoctorProfileCreate() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.mainSpecialty && <p className="text-sm text-destructive">{errors.mainSpecialty.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label>Sub-specialties (Optional)</Label>
+              <Label>Sub-specialties *</Label>
               <div className="grid grid-cols-2 gap-2">
                 {specialties.map((specialty) => (
                   <div key={specialty} className="flex items-center space-x-2">
                     <Checkbox
                       id={`sub-${specialty}`}
                       checked={watchedValues.subSpecialties?.includes(specialty.toLowerCase())}
-                      onCheckedChange={(checked) => handleArrayField("subSpecialties", specialty.toLowerCase(), checked as boolean)}
+                      onCheckedChange={(checked:boolean) => handleArrayField("subSpecialties", specialty.toLowerCase(), checked as boolean)}
                     />
                     <Label htmlFor={`sub-${specialty}`}>{specialty}</Label>
                   </div>
                 ))}
               </div>
+              {errors.subSpecialties && <p className="text-sm text-destructive">{errors.subSpecialties.message}</p>}
             </div>
           </div>
         );
@@ -212,12 +375,13 @@ export default function DoctorProfileCreate() {
                     <Checkbox
                       id={degree}
                       checked={watchedValues.degrees?.includes(degree)}
-                      onCheckedChange={(checked) => handleArrayField("degrees", degree, checked as boolean)}
+                      onCheckedChange={(checked:boolean) => handleArrayField("degrees", degree, checked as boolean)}
                     />
                     <Label htmlFor={degree}>{degree}</Label>
                   </div>
                 ))}
               </div>
+              {errors.degrees && <p className="text-sm text-destructive">{errors.degrees.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -233,8 +397,11 @@ export default function DoctorProfileCreate() {
 
             <div className="space-y-2">
               <Label htmlFor="graduationYear">Graduation Year *</Label>
-              <Select onValueChange={(value) => setValue("graduationYear", value)}>
-                <SelectTrigger>
+              <Select 
+                onValueChange={(value:string) => handleSelectChange("graduationYear", value)}
+                value={watchedValues.graduationYear}
+              >
+                <SelectTrigger className={errors.graduationYear ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select graduation year" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,6 +410,7 @@ export default function DoctorProfileCreate() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.graduationYear && <p className="text-sm text-destructive">{errors.graduationYear.message}</p>}
             </div>
           </div>
         );
@@ -252,8 +420,11 @@ export default function DoctorProfileCreate() {
           <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="yearsExperience">Total Years of Experience *</Label>
-              <Select onValueChange={(value) => setValue("yearsExperience", value)}>
-                <SelectTrigger>
+              <Select 
+                onValueChange={(value:string) => handleSelectChange("yearsExperience", value)}
+                value={watchedValues.yearsExperience}
+              >
+                <SelectTrigger className={errors.yearsExperience ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select years of experience" />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,16 +433,26 @@ export default function DoctorProfileCreate() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.yearsExperience && <p className="text-sm text-destructive">{errors.yearsExperience.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pastWorkplaces">Past Hospitals/Clinics</Label>
+              <Label htmlFor="pastWorkplaces">Past Hospitals/Clinics *</Label>
               <Textarea
                 id="pastWorkplaces"
                 placeholder="List your previous workplaces (one per line)"
                 className="min-h-[100px]"
-                {...register("pastWorkplaces")}
+                {...register("pastWorkplaces", { 
+                  required: "Past workplaces are required",
+                  validate: (value) => {
+                    if (!value || value.length === 0) {
+                      return "Please list at least one workplace";
+                    }
+                    return true;
+                  }
+                })}
               />
+              {errors.pastWorkplaces && <p className="text-sm text-destructive">{errors.pastWorkplaces.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -313,10 +494,10 @@ export default function DoctorProfileCreate() {
             </div>
 
             <div className="space-y-2">
-              <Label>Clinic Photos (Optional)</Label>
+              <Label>Clinic Photos</Label>
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Upload clinic photos</p>
+                <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
                 <p className="text-xs text-muted-foreground">Multiple files supported</p>
               </div>
             </div>
@@ -344,12 +525,13 @@ export default function DoctorProfileCreate() {
                     <Checkbox
                       id={day}
                       checked={watchedValues.availableDays?.includes(day)}
-                      onCheckedChange={(checked) => handleArrayField("availableDays", day, checked as boolean)}
+                      onCheckedChange={(checked:boolean) => handleArrayField("availableDays", day, checked)}
                     />
                     <Label htmlFor={day}>{day}</Label>
                   </div>
                 ))}
               </div>
+              {errors.availableDays && <p className="text-sm text-destructive">{errors.availableDays.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -360,12 +542,13 @@ export default function DoctorProfileCreate() {
                     <Checkbox
                       id={slot}
                       checked={watchedValues.timeSlots?.includes(slot)}
-                      onCheckedChange={(checked) => handleArrayField("timeSlots", slot, checked as boolean)}
+                      onCheckedChange={(checked:boolean) => handleArrayField("timeSlots", slot, checked)}
                     />
                     <Label htmlFor={slot}>{slot}</Label>
                   </div>
                 ))}
               </div>
+              {errors.timeSlots && <p className="text-sm text-destructive">{errors.timeSlots.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -375,7 +558,7 @@ export default function DoctorProfileCreate() {
                   <Checkbox
                     id="online"
                     checked={watchedValues.consultationType?.includes("online")}
-                    onCheckedChange={(checked) => handleArrayField("consultationType", "online", checked as boolean)}
+                    onCheckedChange={(checked:boolean) => handleArrayField("consultationType", "online", checked)}
                   />
                   <Label htmlFor="online">Online Consultation</Label>
                 </div>
@@ -383,11 +566,12 @@ export default function DoctorProfileCreate() {
                   <Checkbox
                     id="in-person"
                     checked={watchedValues.consultationType?.includes("in-person")}
-                    onCheckedChange={(checked) => handleArrayField("consultationType", "in-person", checked as boolean)}
+                    onCheckedChange={(checked:boolean) => handleArrayField("consultationType", "in-person", checked)}
                   />
                   <Label htmlFor="in-person">In-Person Consultation</Label>
                 </div>
               </div>
+              {errors.consultationType && <p className="text-sm text-destructive">{errors.consultationType.message}</p>}
             </div>
           </div>
         );
@@ -404,7 +588,13 @@ export default function DoctorProfileCreate() {
                   type="number"
                   placeholder="50"
                   className="pl-10"
-                  {...register("onlineFee", { required: "Online fee is required" })}
+                  {...register("onlineFee", { 
+                    required: "Online fee is required",
+                    min: {
+                      value: 0,
+                      message: "Fee must be positive"
+                    }
+                  })}
                 />
               </div>
               {errors.onlineFee && <p className="text-sm text-destructive">{errors.onlineFee.message}</p>}
@@ -419,14 +609,20 @@ export default function DoctorProfileCreate() {
                   type="number"
                   placeholder="100"
                   className="pl-10"
-                  {...register("inPersonFee", { required: "In-person fee is required" })}
+                  {...register("inPersonFee", { 
+                    required: "In-person fee is required",
+                    min: {
+                      value: 0,
+                      message: "Fee must be positive"
+                    }
+                  })}
                 />
               </div>
               {errors.inPersonFee && <p className="text-sm text-destructive">{errors.inPersonFee.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="followUpFee">Follow-up Fee (Optional)</Label>
+              <Label htmlFor="followUpFee">Follow-up Fee *</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -434,12 +630,16 @@ export default function DoctorProfileCreate() {
                   type="number"
                   placeholder="30"
                   className="pl-10"
-                  {...register("followUpFee")}
+                  {...register("followUpFee", {
+                    required: "Follow-up fee is required",
+                    min: {
+                      value: 0,
+                      message: "Fee must be positive"
+                    }
+                  })}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Leave empty if follow-up consultations are free
-              </p>
+              {errors.followUpFee && <p className="text-sm text-destructive">{errors.followUpFee.message}</p>}
             </div>
 
             <div className="p-4 bg-primary/5 rounded-lg">
@@ -455,7 +655,7 @@ export default function DoctorProfileCreate() {
                 </div>
                 <div className="flex justify-between">
                   <span>Follow-up:</span>
-                  <span>${watchedValues.followUpFee || 'Free'}</span>
+                  <span>${watchedValues.followUpFee || '0'}</span>
                 </div>
               </div>
             </div>
