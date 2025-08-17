@@ -29,6 +29,14 @@ import { AdminAuthController } from '../controllers/admin/adminAuthController';
 import { IUserMgtService } from '../interfaces/IUserMgtServices';
 import { UserMgtService } from '../services/admin/userMgtServices';
 import { AdminUserMgtController } from '../controllers/admin/userMgtController';
+import { PatientService } from '../services/patient/patientServices';
+import { IPatientServices } from '../interfaces/IPatientServices';
+import { PatientController } from '../controllers/patients/patientController';
+import { IPatientRepository } from '../interfaces/IPatiantRepository';
+import { PatientRepository } from '../repositories/patiantRepository';
+import { IDoctorMgtService } from '../interfaces/IDoctorMgtServices';
+import { DoctorMgtService } from '../services/admin/doctorMgtServices';
+import { AdminDoctorMgtController } from '../controllers/admin/doctorMgtController';
 container.register<IUserRepository>('IUserRepository', { useClass: UserRepository });
 container.register<IAuthService>('IAuthService', { useClass: AuthService });
 container.register<AuthController>('AuthController', { useClass: AuthController })
@@ -66,3 +74,19 @@ container.register<AdminAuthController>('AdminAuthController', { useClass: Admin
 
 container.register<IUserMgtService>('IUserMgtService', { useClass: UserMgtService });
 container.register<AdminUserMgtController>('AdminUserMgtController', { useClass: AdminUserMgtController })
+
+
+
+container.register<IPatientRepository>('IPatientRepository', {
+  useClass: PatientRepository,
+});
+
+
+
+container.register<IPatientServices>('IPatientServices', { useClass: PatientService });
+container.register<PatientController>('PatientController', { useClass: PatientController });
+
+
+
+container.register<IDoctorMgtService>('IDoctorMgtService', { useClass: DoctorMgtService });
+container.register<AdminDoctorMgtController>('AdminDoctorMgtController', { useClass: AdminDoctorMgtController });
