@@ -38,6 +38,9 @@ import {
 import { IDoctor } from "@/types/patients";
 import { updateDoctorProfile } from "@/services/doctor/doctorProfileServices";
 import toast from "react-hot-toast";
+import { specialties } from "@/constants/constants";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { languages } from "@/constants/constants";
 interface DoctorEditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -55,15 +58,32 @@ export default function DoctorEditProfileModal({
   const [avatarPreview, setAvatarPreview] = useState(doctor.profileImage);
   const [activeTab, setActiveTab] = useState("basic");
   console.log("Doctor data in modal:", doctor);
+  const formatTime = (time: string) => {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  return `${hours.padStart(2, '0')}:${minutes || '00'}`;
+};
+
+
+const formattedDoctor = {
+  ...doctor,
+  availability: doctor.availability.map(avail => ({
+    ...avail,
+    startTime: formatTime(avail.startTime),
+    endTime: formatTime(avail.endTime)
+  }))
+};
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     control,
     formState: { errors },
     reset,
   } = useForm<IDoctor>({
-    defaultValues: doctor,
+    defaultValues: formattedDoctor,
   });
 
   const {
@@ -102,32 +122,6 @@ export default function DoctorEditProfileModal({
     name: "consultationFees",
   });
 
-  const specializations = [
-    "Cardiology",
-    "Neurology",
-    "Orthopedics",
-    "Pediatrics",
-    "Dermatology",
-    "Psychiatry",
-    "Radiology",
-    "Oncology",
-    "Gynecology",
-    "Ophthalmology",
-    "ENT",
-    "General Medicine",
-    "Surgery",
-    "Anesthesiology",
-    "Pathology",
-  ];
-
-  const expertiseAreas = [
-    "Heart Surgery",
-    "Preventive Cardiology",
-    "Interventional Cardiology",
-    "Pediatric Cardiology",
-    "Electrophysiology",
-    "Cardiac Rehabilitation",
-  ];
 
   const commonLanguages = [
     "English",
@@ -199,6 +193,9 @@ export default function DoctorEditProfileModal({
       reader.readAsDataURL(file);
     }
   };
+console.log("Initial doctor data:", doctor);
+console.log("Form values:", watch());
+console.log("Availability values:", watch("availability"));
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -356,54 +353,7 @@ export default function DoctorEditProfileModal({
                   )}
                 </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="doctor-password">Password *</Label>
-                  <Input
-                    id="doctor-password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                    })}
-                    className={errors.password ? "border-destructive" : ""}
-                  />
-                  {errors.password && (
-                    <p className="text-sm text-destructive">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="doctor-confirm-password">
-                    Confirm Password *
-                  </Label>
-                  <Input
-                    id="doctor-confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("confirmPassword", {
-                      required: "Please confirm your password",
-                      validate: (value, formValues) =>
-                        value === formValues.password ||
-                        "Passwords do not match",
-                    })}
-                    className={
-                      errors.confirmPassword ? "border-destructive" : ""
-                    }
-                  />
-                  {errors.confirmPassword && (
-                    <p className="text-sm text-destructive">
-                      {errors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
+    
               </div>
 
               {/* Bio */}
@@ -419,323 +369,303 @@ export default function DoctorEditProfileModal({
             </TabsContent>
 
             {/* Professional Information Tab */}
-            <TabsContent value="professional" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Specializations */}
-                <div className="space-y-2">
-                  <Label>Specializations *</Label>
-                  <Controller
-                    name="specializations"
-                    control={control}
-                    rules={{
-                      required: "At least one specialization is required",
-                    }}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value[field.value.length - 1] || ""}
-                        onValueChange={(value: string) => {
-                          if (value && !field.value.includes(value)) {
-                            field.onChange([...field.value, value]);
-                          }
-                        }}
-                      >
-                        <SelectTrigger
-                          className={
-                            errors.specializations ? "border-destructive" : ""
-                          }
-                        >
-                          <SelectValue placeholder="Add specialization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {specializations.map((spec) => (
-                            <SelectItem key={spec} value={spec}>
-                              {spec}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {doctor.specializations?.map((spec) => (
-                      <Badge
-                        key={spec}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                      >
-                        {spec}
-                        <X
-                          className="w-3 h-3 cursor-pointer"
-                          onClick={() => {
-                            const current = control._formValues.specializations;
-                            control._formValues.specializations =
-                              current.filter((s: string) => s !== spec);
-                          }}
-                        />
-                      </Badge>
-                    ))}
+{/* Professional Information Tab */}
+<TabsContent value="professional" className="space-y-6">
+  <div className="space-y-6">
+    {/* Expertise Areas - Now full width */}
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-base">Professional Expertise *</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Specialty Selection */}
+          <div className="space-y-2 border p-4 rounded-lg">
+            <Label>Select Your Specialty *</Label>
+            <RadioGroup
+              onValueChange={(value: string) => {
+                setValue("specializations", [value]);
+                setValue("expertiseAreas", []); // Clear sub-specialty when changing specialty
+              }}
+              value={watch("specializations")?.[0] || ""}
+            >
+              <div className="space-y-3">
+                {specialties.map((specialty) => (
+                  <div key={specialty.name} className="flex items-center space-x-3">
+                    <RadioGroupItem
+                      value={specialty.name}
+                      id={`spec-${specialty.name}`}
+                    />
+                    <Label htmlFor={`spec-${specialty.name}`} className="text-sm font-medium leading-none">
+                      {specialty.name}
+                    </Label>
                   </div>
-                  {errors.specializations && (
-                    <p className="text-sm text-destructive">
-                      {errors.specializations.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Expertise Areas */}
-                <div className="space-y-2">
-                  <Label>Expertise Areas</Label>
-                  <Controller
-                    name="expertiseAreas"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value[field.value.length - 1] || ""}
-                        onValueChange={(value: string) => {
-                          if (value && !field.value.includes(value)) {
-                            field.onChange([...field.value, value]);
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Add expertise area" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {expertiseAreas.map((area) => (
-                            <SelectItem key={area} value={area}>
-                              {area}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {doctor.expertiseAreas?.map((area) => (
-                      <Badge
-                        key={area}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                      >
-                        {area}
-                        <X
-                          className="w-3 h-3 cursor-pointer"
-                          onClick={() => {
-                            const current = control._formValues.expertiseAreas;
-                            control._formValues.expertiseAreas = current.filter(
-                              (a: string) => a !== area
-                            );
-                          }}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Education */}
-                <div className="space-y-4 col-span-2">
-                  <Label className="text-base">Education</Label>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="doctor-degree">Degree *</Label>
-                      <Input
-                        id="doctor-degree"
-                        placeholder="MBBS, MD - Cardiology"
-                        {...register("education.degree", {
-                          required: "Degree is required",
-                        })}
-                        className={
-                          errors.education?.degree ? "border-destructive" : ""
-                        }
-                      />
-                      {errors.education?.degree && (
-                        <p className="text-sm text-destructive">
-                          {errors.education.degree.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="doctor-university">University *</Label>
-                      <Input
-                        id="doctor-university"
-                        placeholder="AIIMS Delhi"
-                        {...register("education.university", {
-                          required: "University is required",
-                        })}
-                        className={
-                          errors.education?.university
-                            ? "border-destructive"
-                            : ""
-                        }
-                      />
-                      {errors.education?.university && (
-                        <p className="text-sm text-destructive">
-                          {errors.education.university.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="doctor-graduation-year">
-                        Graduation Year *
-                      </Label>
-                      <Input
-                        id="doctor-graduation-year"
-                        type="number"
-                        placeholder="2005"
-                        {...register("education.year", {
-                          required: "Graduation year is required",
-                          min: { value: 1900, message: "Invalid year" },
-                          max: {
-                            value: new Date().getFullYear(),
-                            message: "Year cannot be in the future",
-                          },
-                        })}
-                        className={
-                          errors.education?.year ? "border-destructive" : ""
-                        }
-                      />
-                      {errors.education?.year && (
-                        <p className="text-sm text-destructive">
-                          {errors.education.year.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Experience */}
-                <div className="space-y-4 col-span-2">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-base">Experience</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendHospital({ name: "", years: "" })}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Hospital
-                    </Button>
-                  </div>
-
-                  {hospitalFields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid md:grid-cols-2 gap-4 p-4 border rounded"
-                    >
-                      <div className="space-y-2">
-                        <Label>Hospital Name *</Label>
-                        <Input
-                          placeholder="Apollo Hospitals"
-                          {...register(`experience.hospitals.${index}.name`, {
-                            required: "Hospital name is required",
-                          })}
-                          className={
-                            errors.experience?.hospitals?.[index]?.name
-                              ? "border-destructive"
-                              : ""
-                          }
-                        />
-                        {errors.experience?.hospitals?.[index]?.name && (
-                          <p className="text-sm text-destructive">
-                            {errors.experience.hospitals[index]?.name?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Years *</Label>
-                        <Input
-                          placeholder="2010-2015"
-                          {...register(`experience.hospitals.${index}.years`, {
-                            required: "Years are required",
-                          })}
-                          className={
-                            errors.experience?.hospitals?.[index]?.years
-                              ? "border-destructive"
-                              : ""
-                          }
-                        />
-                        {errors.experience?.hospitals?.[index]?.years && (
-                          <p className="text-sm text-destructive">
-                            {errors.experience.hospitals[index]?.years?.message}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => removeHospital(index)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Languages */}
-                <div className="space-y-2 col-span-2">
-                  <Label>Languages Spoken *</Label>
-                  <Controller
-                    name="languages"
-                    control={control}
-                    rules={{ required: "At least one language is required" }}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value[field.value.length - 1] || ""}
-                        onValueChange={(value: string) => {
-                          if (value && !field.value.includes(value)) {
-                            field.onChange([...field.value, value]);
-                          }
-                        }}
-                      >
-                        <SelectTrigger
-                          className={
-                            errors.languages ? "border-destructive" : ""
-                          }
-                        >
-                          <SelectValue placeholder="Add language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {commonLanguages.map((lang) => (
-                            <SelectItem key={lang} value={lang}>
-                              {lang}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {doctor.languages?.map((lang) => (
-                      <Badge
-                        key={lang}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                      >
-                        {lang}
-                        <X
-                          className="w-3 h-3 cursor-pointer"
-                          onClick={() => {
-                            const current = control._formValues.languages;
-                            control._formValues.languages = current.filter(
-                              (l: string) => l !== lang
-                            );
-                          }}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                  {errors.languages && (
-                    <p className="text-sm text-destructive">
-                      {errors.languages.message}
-                    </p>
-                  )}
-                </div>
+                ))}
               </div>
-            </TabsContent>
+            </RadioGroup>
+            {errors.specializations && (
+              <p className="mt-2 text-sm text-destructive">
+                {errors.specializations.message}
+              </p>
+            )}
+          </div>
 
+          {/* Sub-Specialty Selection */}
+          {watch("specializations")?.[0] && (
+            <div className="space-y-2 border p-4 rounded-lg">
+              <Label>Select Your Sub-Specialty *</Label>
+              <RadioGroup
+                onValueChange={(value: string) => {
+                  setValue("expertiseAreas", [value]);
+                }}
+                value={watch("expertiseAreas")?.[0] || ""}
+              >
+                <div className="space-y-3">
+                  {specialties
+                    .find((s) => s.name === watch("specializations")?.[0])
+                    ?.subSpecialties.map((subSpecialty) => (
+                      <div key={subSpecialty} className="flex items-center space-x-3">
+                        <RadioGroupItem
+                          value={subSpecialty}
+                          id={`subspec-${subSpecialty}`}
+                        />
+                        <Label htmlFor={`subspec-${subSpecialty}`} className="text-sm font-medium leading-none">
+                          {subSpecialty}
+                        </Label>
+                      </div>
+                    ))}
+                </div>
+              </RadioGroup>
+              {errors.expertiseAreas && (
+                <p className="mt-2 text-sm text-destructive">
+                  {errors.expertiseAreas.message}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* Rest of your form components (Education, Experience, Languages) */}
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Education */}
+    <div className="space-y-4 col-span-2">
+      <Label className="text-base">Education</Label>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="doctor-degree">Degree *</Label>
+          <Input
+            id="doctor-degree"
+            placeholder="MBBS, MD - Cardiology"
+            {...register("education.degree", {
+              required: "Degree is required",
+            })}
+            className={
+              errors.education?.degree ? "border-destructive" : ""
+            }
+          />
+          {errors.education?.degree && (
+            <p className="text-sm text-destructive">
+              {errors.education.degree.message}
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="doctor-university">University *</Label>
+          <Input
+            id="doctor-university"
+            placeholder="AIIMS Delhi"
+            {...register("education.university", {
+              required: "University is required",
+            })}
+            className={
+              errors.education?.university
+                ? "border-destructive"
+                : ""
+            }
+          />
+          {errors.education?.university && (
+            <p className="text-sm text-destructive">
+              {errors.education.university.message}
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="doctor-graduation-year">
+            Graduation Year *
+          </Label>
+          <Input
+            id="doctor-graduation-year"
+            type="number"
+            placeholder="2005"
+            {...register("education.year", {
+              required: "Graduation year is required",
+              min: { value: 1900, message: "Invalid year" },
+              max: {
+                value: new Date().getFullYear(),
+                message: "Year cannot be in the future",
+              },
+            })}
+            className={
+              errors.education?.year ? "border-destructive" : ""
+            }
+          />
+          {errors.education?.year && (
+            <p className="text-sm text-destructive">
+              {errors.education.year.message}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+
+      {/* Experience */}
+    <div className="space-y-4 col-span-2">
+      <div className="flex justify-between items-center">
+        <Label className="text-base">Experience</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => appendHospital({ name: "", years: "" })}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Hospital
+        </Button>
+      </div>
+
+      {hospitalFields.map((field, index) => (
+        <div
+          key={field.id}
+          className="grid md:grid-cols-2 gap-4 p-4 border rounded"
+        >
+          <div className="space-y-2">
+            <Label>Hospital Name *</Label>
+            <Input
+              placeholder="Apollo Hospitals"
+              {...register(`experience.hospitals.${index}.name`, {
+                required: "Hospital name is required",
+              })}
+              className={
+                errors.experience?.hospitals?.[index]?.name
+                  ? "border-destructive"
+                  : ""
+              }
+            />
+            {errors.experience?.hospitals?.[index]?.name && (
+              <p className="text-sm text-destructive">
+                {errors.experience.hospitals[index]?.name?.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Years *</Label>
+            <Input
+              placeholder="2010-2015"
+              {...register(`experience.hospitals.${index}.years`, {
+                required: "Years are required",
+              })}
+              className={
+                errors.experience?.hospitals?.[index]?.years
+                  ? "border-destructive"
+                  : ""
+              }
+            />
+            {errors.experience?.hospitals?.[index]?.years && (
+              <p className="text-sm text-destructive">
+                {errors.experience.hospitals[index]?.years?.message}
+              </p>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="mt-2"
+            onClick={() => removeHospital(index)}
+          >
+            Remove
+          </Button>
+        </div>
+      ))}
+    </div>
+
+
+      {/* Languages */}
+<div className="space-y-2 col-span-2">
+  <Label>Languages Spoken *</Label>
+  <Controller
+    name="languages"
+    control={control}
+    rules={{ required: "At least one language is required" }}
+    render={({ field }) => {
+      const currentLanguages: string[] = Array.isArray(field.value)
+        ? field.value
+        : [];
+
+      return (
+        <div>
+          <Select
+            value=""
+            onValueChange={(value: string) => {
+              if (value && !currentLanguages.includes(value)) {
+                field.onChange([...currentLanguages, value]);
+              }
+            }}
+          >
+            <SelectTrigger
+              className={errors.languages ? "border-destructive" : ""}
+            >
+              <SelectValue placeholder="Add language" />
+            </SelectTrigger>
+            <SelectContent>
+              {commonLanguages.map((lang) => (
+                <SelectItem
+                  key={lang}
+                  value={lang}
+                  disabled={currentLanguages.includes(lang)}
+                >
+                  {lang}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Selected languages with remove option */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {currentLanguages.map((lang) => (
+              <Badge
+                key={lang}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {lang}
+                <button
+                  type="button"
+                  className="ml-1 text-red-500 hover:text-red-700"
+                  onClick={() => {
+                    const updated = currentLanguages.filter(
+                      (l) => l !== lang
+                    );
+                    field.onChange(updated);
+                  }}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </div>
+      );
+    }}
+  />
+  {errors.languages && (
+    <p className="text-sm text-destructive">{errors.languages.message}</p>
+  )}
+</div>
+
+    </div>
+  </div>
+</TabsContent>
             {/* Practice Information Tab */}
             <TabsContent value="practice" className="space-y-6">
               <div className="space-y-4">

@@ -45,7 +45,8 @@ import React from "react";
 import { useDoctorRegistrationStore } from "@/store/doctorRegistrationStore";
 import { registerDoctor } from "@/services/doctor/doctorProfileServices";
 import toast from "react-hot-toast";
-
+import { specialties } from "@/constants/constants";
+import { languages } from "@/constants/constants";
 interface DoctorProfileForm {
   fullName: string;
   email: string;
@@ -95,55 +96,9 @@ interface Specialty {
   subSpecialties: string[];
 }
 
-const specialties: Specialty[] = [
-  {
-    name: "Cardiology",
-    subSpecialties: [
-      "Interventional Cardiology",
-      "Electrophysiology",
-      "Heart Failure",
-      "Preventive Cardiology",
-    ],
-  },
-  {
-    name: "Neurology",
-    subSpecialties: [
-      "Epileptology",
-      "Stroke Medicine",
-      "Movement Disorders",
-      "Pediatric Neurology",
-    ],
-  },
-  {
-    name: "Orthopedics",
-    subSpecialties: [
-      "Spine Surgery",
-      "Sports Medicine",
-      "Joint Replacement",
-      "Pediatric Orthopedics",
-    ],
-  },
-  {
-    name: "Pediatrics",
-    subSpecialties: [
-      "Neonatology",
-      "Pediatric Cardiology",
-      "Pediatric Endocrinology",
-      "Developmental Pediatrics",
-    ],
-  },
-];
 
-const languages = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Hindi",
-  "Mandarin",
-  "Arabic",
-  "Portuguese",
-];
+
+
 const degrees = ["MBBS", "MD", "MS", "DM", "MCh", "DNB", "FRCS", "MRCP"];
 const availableDays = [
   "Monday",
