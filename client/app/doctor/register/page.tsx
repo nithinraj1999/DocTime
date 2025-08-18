@@ -90,20 +90,50 @@ interface DoctorProfileForm {
   }>;
 }
 
-const specialties = [
-  "Cardiology",
-  "Dermatology",
-  "Endocrinology",
-  "Gastroenterology",
-  "Neurology",
-  "Oncology",
-  "Orthopedics",
-  "Pediatrics",
-  "Psychiatry",
-  "Radiology",
-  "Surgery",
-  "General Medicine",
+interface Specialty {
+  name: string;
+  subSpecialties: string[];
+}
+
+const specialties: Specialty[] = [
+  {
+    name: "Cardiology",
+    subSpecialties: [
+      "Interventional Cardiology",
+      "Electrophysiology",
+      "Heart Failure",
+      "Preventive Cardiology",
+    ],
+  },
+  {
+    name: "Neurology",
+    subSpecialties: [
+      "Epileptology",
+      "Stroke Medicine",
+      "Movement Disorders",
+      "Pediatric Neurology",
+    ],
+  },
+  {
+    name: "Orthopedics",
+    subSpecialties: [
+      "Spine Surgery",
+      "Sports Medicine",
+      "Joint Replacement",
+      "Pediatric Orthopedics",
+    ],
+  },
+  {
+    name: "Pediatrics",
+    subSpecialties: [
+      "Neonatology",
+      "Pediatric Cardiology",
+      "Pediatric Endocrinology",
+      "Developmental Pediatrics",
+    ],
+  },
 ];
+
 const languages = [
   "English",
   "Spanish",
@@ -685,73 +715,73 @@ export default function DoctorProfileCreate() {
           </div>
         );
 
-      case 2: // Specialization
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label>Specializations *</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {specialties.map((specialty) => (
-                  <div key={specialty} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`spec-${specialty}`}
-                      checked={
-                        watchedValues.specializations?.includes(specialty) ||
-                        doctorData?.specializations?.includes(specialty)
-                      }
-                      onCheckedChange={(checked: boolean) =>
-                        handleArrayField(
-                          "specializations",
-                          specialty,
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <Label htmlFor={`spec-${specialty}`}>{specialty}</Label>
-                  </div>
-                ))}
+case 2: // Specialization
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>Select Your Specialty *</Label>
+        <RadioGroup
+          onValueChange={(value:string) => {
+            setValue("specializations", [value]);
+            setValue("expertiseAreas", []); // Clear sub-specialty when changing specialty
+          }}
+          value={watch("specializations")?.[0] || ""}
+        >
+          <div className="grid gap-2">
+            {specialties.map((specialty) => (
+              <div key={specialty.name} className="flex items-center space-x-2">
+                <RadioGroupItem 
+                  value={specialty.name} 
+                  id={`spec-${specialty.name}`} 
+                />
+                <Label htmlFor={`spec-${specialty.name}`}>
+                  {specialty.name}
+                </Label>
               </div>
-              {errors.specializations && (
-                <p className="text-sm text-destructive">
-                  {errors.specializations.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Areas of Expertise *</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {specialties.map((specialty) => (
-                  <div
-                    key={`exp-${specialty}`}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`exp-${specialty}`}
-                      checked={
-                        watchedValues.expertiseAreas?.includes(specialty) ||
-                        doctorData?.expertiseAreas?.includes(specialty)
-                      }
-                      onCheckedChange={(checked: boolean) =>
-                        handleArrayField(
-                          "expertiseAreas",
-                          specialty,
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <Label htmlFor={`exp-${specialty}`}>{specialty}</Label>
-                  </div>
-                ))}
-              </div>
-              {errors.expertiseAreas && (
-                <p className="text-sm text-destructive">
-                  {errors.expertiseAreas.message}
-                </p>
-              )}
-            </div>
+            ))}
           </div>
-        );
+        </RadioGroup>
+        {errors.specializations && (
+          <p className="text-sm text-destructive">
+            {errors.specializations.message}
+          </p>
+        )}
+      </div>
+
+      {watch("specializations")?.[0] && (
+        <div className="space-y-2">
+          <Label>Select Your Sub-Specialty *</Label>
+          <RadioGroup
+            onValueChange={(value:string) => {
+              setValue("expertiseAreas", [value]);
+            }}
+            value={watch("expertiseAreas")?.[0] || ""}
+          >
+            <div className="grid gap-2">
+              {specialties
+                .find(s => s.name === watch("specializations")?.[0])
+                ?.subSpecialties.map((subSpecialty) => (
+                  <div key={subSpecialty} className="flex items-center space-x-2">
+                    <RadioGroupItem 
+                      value={subSpecialty} 
+                      id={`subspec-${subSpecialty}`} 
+                    />
+                    <Label htmlFor={`subspec-${subSpecialty}`}>
+                      {subSpecialty}
+                    </Label>
+                  </div>
+                ))}
+            </div>
+          </RadioGroup>
+          {errors.expertiseAreas && (
+            <p className="text-sm text-destructive">
+              {errors.expertiseAreas.message}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
       case 3: // Education
         return (
