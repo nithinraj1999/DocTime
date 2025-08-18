@@ -72,4 +72,13 @@ export class DoctorProfileService implements IDoctorProfileServices {
         await redis.setex(`otp:${email}`, 300, otp)
         return otp
     }
+
+
+    async getProfile(id: string): Promise<Partial<IDoctor>> {
+        const doctor = await this.doctorRepository.findById(id)
+        console.log("......",doctor);
+        
+        if (!doctor) throw new Error('Doctor not found')
+          return doctor
+    }
 }

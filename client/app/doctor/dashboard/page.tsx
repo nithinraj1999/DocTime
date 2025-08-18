@@ -11,51 +11,48 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-
+import { getDoctorProfile } from "@/services/doctor/doctorProfileServices";
+import { useDoctorStore } from "@/store/doctorDetailsStore";
+import { IDoctor } from "@/types/patients";
+import DoctorEditProfileModal from "@/components/EditDoctorModal";
 export default function DoctorDashboard() {
+
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState<string>("");
   const [formattedLongDate, setFormattedLongDate] = useState<string>("");
+  const doctorID = useDoctorStore((state) => state?.user?.id);
+  const [doctor, setDoctor] = useState<IDoctor | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   useEffect(() => {
-    // This will only run on client side after hydration
+    async function fetchDoctorProfile() {
+      try {
+        setLoading(true);
+        if (doctorID) {
+          const profile = await getDoctorProfile(doctorID);
+          
+          setDoctor(profile.doctor);
+        }
+      } catch (error) {
+        console.error("Error fetching doctor profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDoctorProfile();
     setCurrentDate(format(new Date(), 'yyyy-MM-dd'));
     setFormattedLongDate(format(new Date(), 'EEEE, MMMM d, yyyy'));
-  }, []);
+  }, [doctorID]);
 
-  // Mock doctor data (this would come from API/database)
-  const doctor = {
-    name: "Dr. Sarah Johnson",
-    email: "sarah.johnson@healthcare.com",
-    profilePhoto: "",
-    specialization: "Cardiologist",
-    experience: "12 years",
-    rating: 4.8,
-    totalPatients: 1247,
-    totalConsultations: 3420,
-    languages: ["English", "Spanish", "French"],
-    licenseNumber: "MD123456",  
-    education: {
-      degrees: ["MBBS", "MD"],
-      university: "Harvard Medical School",
-      graduationYear: "2012"
-    },
-    clinic: {
-      name: "Heart Care Medical Center",
-      address: "123 Medical Plaza, New York, NY 10001",
-      photos: []
-    },
-    availability: {
-      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      timeSlots: ["9:00 AM", "10:00 AM", "11:00 AM", "2:00 PM", "3:00 PM", "4:00 PM"],
-      consultationType: ["online", "in-person"]
-    },
-    fees: {
-      online: 75,
-      inPerson: 150,
-      followUp: 50
-    }
-  };
+  if (loading || !doctor) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   const todayStats = {
     appointments: 8,
@@ -146,6 +143,10 @@ export default function DoctorDashboard() {
     { id: 2, type: "report", patient: "Emily Davis", description: "Lab results review required" },
     { id: 3, type: "follow-up", patient: "Michael Brown", description: "Schedule follow-up appointment" }
   ];
+  const handleUpdateProfile = (updatedProfile: IDoctor) => {
+    setDoctor(updatedProfile);
+  };
+
 
   const handleLogout = () => {
     router.push("/doctor/login");
@@ -159,6 +160,9 @@ export default function DoctorDashboard() {
       default: return "bg-gray-500";
     }
   };
+
+  // Safely get the last name
+  const lastName = doctor.fullName.split(' ')[1] || doctor.fullName.split(' ')[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10">
@@ -200,7 +204,7 @@ export default function DoctorDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                Good morning, Dr. {doctor.name.split(' ')[1]}! 👋
+                Good morning, Dr. {lastName}! 👋
               </h1>
               {formattedLongDate && (
                 <p className="text-muted-foreground">
@@ -245,7 +249,7 @@ export default function DoctorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Patients</p>
-                  <p className="text-2xl font-bold text-primary">{doctor.totalPatients}</p>
+                  <p className="text-2xl font-bold text-primary">{  "N/A"}</p>
                   <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
                     <TrendingUp className="w-3 h-3" />
                     <span>+12% this month</span>
@@ -278,7 +282,7 @@ export default function DoctorDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">Patient Rating</p>
                   <div className="flex items-center gap-1">
-                    <p className="text-2xl font-bold text-primary">{doctor.rating}</p>
+                    <p className="text-2xl font-bold text-primary">{ "N/A"}</p>
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">Based on 324 reviews</p>
@@ -293,7 +297,7 @@ export default function DoctorDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Tabs for different views */}
-            <Tabs defaultValue="appointments" className="w-full" suppressHydrationWarning>
+            <Tabs defaultValue="appointments" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="appointments">Appointments</TabsTrigger>
                 <TabsTrigger value="patients">Patients</TabsTrigger>
@@ -308,7 +312,7 @@ export default function DoctorDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle>Today's Schedule</CardTitle>
-                        <CardDescription suppressHydrationWarning>
+                        <CardDescription>
                           Your appointments for {currentDate}
                         </CardDescription>
                       </div>
@@ -471,7 +475,7 @@ export default function DoctorDashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>My Profile</CardTitle>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => setIsEditProfileModalOpen(true)}>
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
                   </Button>
@@ -480,16 +484,15 @@ export default function DoctorDashboard() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src={doctor.profilePhoto} />
+                    <AvatarImage src={doctor.profileImage} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                      {doctor.name.split(' ').map(n => n[0]).join('')}
+                      {doctor.fullName.split(' ').map((n) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-lg">{doctor.name}</h3>
-                    <p className="text-muted-foreground">{doctor.specialization}</p>
-                    <p className="text-sm text-muted-foreground">{doctor.experience} experience</p>
-                    <p className="text-xs text-muted-foreground">License: {doctor.licenseNumber}</p>
+                    <h3 className="font-semibold text-lg">{doctor.fullName}</h3>
+                    <p className="text-muted-foreground">{doctor.specializations?.join(", ") || "General Practitioner"}</p>
+                    <p className="text-sm text-muted-foreground">{doctor.experience?.hospitals?.[0]?.years || "N/A"} experience</p>
                   </div>
                 </div>
 
@@ -498,7 +501,7 @@ export default function DoctorDashboard() {
                     <Stethoscope className="w-5 h-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Specialization</p>
-                      <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
+                      <p className="text-sm text-muted-foreground">{doctor.specializations?.join(", ") || "General Practitioner"}</p>
                     </div>
                   </div>
 
@@ -507,7 +510,7 @@ export default function DoctorDashboard() {
                     <div>
                       <p className="font-medium">Education</p>
                       <p className="text-sm text-muted-foreground">
-                        {doctor.education.degrees.join(", ")} - {doctor.education.university} ({doctor.education.graduationYear})
+                        {doctor.education?.degree} - {doctor.education?.university} ({doctor.education?.year})
                       </p>
                     </div>
                   </div>
@@ -516,8 +519,8 @@ export default function DoctorDashboard() {
                     <MapPin className="w-5 h-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Clinic</p>
-                      <p className="text-sm text-muted-foreground">{doctor.clinic.name}</p>
-                      <p className="text-xs text-muted-foreground">{doctor.clinic.address}</p>
+                      <p className="text-sm text-muted-foreground">{doctor.clinics?.[0]?.clinicName || "N/A"}</p>
+                      <p className="text-xs text-muted-foreground">{doctor.clinics?.[0]?.address || "N/A"}</p>
                     </div>
                   </div>
 
@@ -526,8 +529,8 @@ export default function DoctorDashboard() {
                     <div>
                       <p className="font-medium">Availability</p>
                       <p className="text-sm text-muted-foreground">
-                        {doctor.availability.days.slice(0, 3).join(", ")}
-                        {doctor.availability.days.length > 3 && ` +${doctor.availability.days.length - 3} more`}
+                        {doctor.availability?.slice(0, 3).map(a => a.dayOfWeek).join(", ")}
+                        {doctor.availability?.length > 3 && ` +${doctor.availability.length - 3} more`}
                       </p>
                     </div>
                   </div>
@@ -537,9 +540,9 @@ export default function DoctorDashboard() {
                     <div>
                       <p className="font-medium">Consultation Fees</p>
                       <div className="text-sm text-muted-foreground space-y-1">
-                        <p>Online: ${doctor.fees.online}</p>
-                        <p>In-Person: ${doctor.fees.inPerson}</p>
-                        <p>Follow-up: ${doctor.fees.followUp}</p>
+                        {doctor.consultationFees?.map((fee) => (
+                          <p key={fee.mode}>{fee.mode}: ${fee.fee} {fee.currency}</p>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -547,7 +550,7 @@ export default function DoctorDashboard() {
                   <div>
                     <p className="font-medium mb-2">Languages</p>
                     <div className="flex flex-wrap gap-1">
-                      {doctor.languages.map((language) => (
+                      {doctor.languages?.map((language) => (
                         <Badge key={language} variant="secondary" className="text-xs">
                           {language}
                         </Badge>
@@ -594,6 +597,12 @@ export default function DoctorDashboard() {
           </div>
         </div>
       </div>
+            <DoctorEditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        onUpdateProfile={handleUpdateProfile}
+        doctor={doctor}
+      />
     </div>
   );
 }

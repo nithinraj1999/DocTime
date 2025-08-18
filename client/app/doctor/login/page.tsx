@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Heart, ArrowLeft, Stethoscope } from "lucide-react";
 import { doctorLogin } from "@/services/doctor/doctorAuthServices";
 import toast from "react-hot-toast";
+import { useDoctorStore } from "@/store/doctorDetailsStore";
 interface DoctorLoginForm {
   email: string;
   password: string;
@@ -22,12 +23,13 @@ export default function DoctorLogin() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<DoctorLoginForm>();
-
+const { setUser } = useDoctorStore();
   const onSubmit = async (data: DoctorLoginForm) => {
     setIsLoading(true);
     const response = await doctorLogin(data);
     console.log("Doctor login data:", data);
     if (response.success) {
+      setUser(response.user);
       toast.success("Login successful! Redirecting...");
       router.push("/doctor/dashboard");
     } else {

@@ -78,6 +78,12 @@ export class DoctorRepository implements IDoctorRepository {
     async findById(id: string): Promise<{ id: string } | null> {
         return this.prisma.doctor.findUnique({
             where: { id },
+                        include: {
+                clinics: true,
+                availability: true,
+                consultationFees: true,
+            },
+
         })
     }
     async findByEmail(email: string): Promise<IDoctor | null> {
@@ -86,45 +92,108 @@ export class DoctorRepository implements IDoctorRepository {
         })
     }
 
+    // async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
+    //     const updateData: Prisma.DoctorUpdateInput = {}
+
+    //     if (data.fullName !== undefined) updateData.fullName = data.fullName
+    //     if (data.gender !== undefined) updateData.gender = data.gender
+    //     if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
+    //     if (data.email !== undefined) updateData.email = data.email
+    //     if (data.profileImage !== undefined) updateData.profileImage = data.profileImage
+    //     if (data.bio !== undefined) updateData.bio = data.bio
+    //     if (data.languages !== undefined) updateData.languages = data.languages
+    //     if (data.specializations !== undefined) updateData.specializations = data.specializations
+    //     if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas
+    //     if (data.education !== undefined) updateData.education = data.education
+    //     if (data.experience !== undefined) updateData.experience = data.experience
+    //     if (data.status !== undefined) updateData.status = data.status
+    //     if (data.clinics !== undefined) {
+    //         updateData.clinics = {
+    //             deleteMany: {},
+    //             create: data.clinics
+    //         }
+    //     }
+    //     if (data.availability !== undefined) {
+    //         updateData.availability = {
+    //             deleteMany: {},
+    //             create: data.availability
+    //         }
+    //     }
+    //     if (data.consultationFees !== undefined) {
+    //         updateData.consultationFees = {
+    //             deleteMany: {},
+    //             create: data.consultationFees
+    //         }
+    //     }
+
+    //     return this.prisma.doctor.update({
+    //         where: { id },
+    //         data: updateData
+    //     })
+    // }
     async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
-        const updateData: Prisma.DoctorUpdateInput = {}
+  const updateData: Prisma.DoctorUpdateInput = {};
 
-        if (data.fullName !== undefined) updateData.fullName = data.fullName
-        if (data.gender !== undefined) updateData.gender = data.gender
-        if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
-        if (data.email !== undefined) updateData.email = data.email
-        if (data.profileImage !== undefined) updateData.profileImage = data.profileImage
-        if (data.bio !== undefined) updateData.bio = data.bio
-        if (data.languages !== undefined) updateData.languages = data.languages
-        if (data.specializations !== undefined) updateData.specializations = data.specializations
-        if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas
-        if (data.education !== undefined) updateData.education = data.education
-        if (data.experience !== undefined) updateData.experience = data.experience
-        if (data.status !== undefined) updateData.status = data.status
-        if (data.clinics !== undefined) {
-            updateData.clinics = {
-                deleteMany: {},
-                create: data.clinics
-            }
-        }
-        if (data.availability !== undefined) {
-            updateData.availability = {
-                deleteMany: {},
-                create: data.availability
-            }
-        }
-        if (data.consultationFees !== undefined) {
-            updateData.consultationFees = {
-                deleteMany: {},
-                create: data.consultationFees
-            }
-        }
+  if (data.fullName !== undefined) updateData.fullName = data.fullName;
+  if (data.gender !== undefined) updateData.gender = data.gender;
+  if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.profileImage !== undefined) updateData.profileImage = data.profileImage;
+  if (data.bio !== undefined) updateData.bio = data.bio;
+  if (data.languages !== undefined) updateData.languages = data.languages;
+  if (data.specializations !== undefined) updateData.specializations = data.specializations;
+  if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas;
 
-        return this.prisma.doctor.update({
-            where: { id },
-            data: updateData
-        })
-    }
+  // JSON fields
+  if (data.education !== undefined) updateData.education = data.education;
+  if (data.experience !== undefined) updateData.experience = data.experience;
+
+  if (data.status !== undefined) updateData.status = data.status;
+
+  // Relations
+  if (data.clinics !== undefined) {
+    updateData.clinics = {
+      deleteMany: {},
+      create: data.clinics.map(c => ({
+        clinicName: c.clinicName,
+        address: c.address,
+        city: c.city,
+        state: c.state,
+        country: c.country,
+        postalCode: c.postalCode,
+        phoneNumber: c.phoneNumber,
+      })),
+    };
+  }
+
+  if (data.availability !== undefined) {
+    updateData.availability = {
+      deleteMany: {},
+      create: data.availability.map(a => ({
+        dayOfWeek: a.dayOfWeek,
+        startTime: a.startTime,
+        endTime: a.endTime,
+      })),
+    };
+  }
+
+  if (data.consultationFees !== undefined) {
+    updateData.consultationFees = {
+      deleteMany: {},
+      create: data.consultationFees.map(f => ({
+        mode: f.mode,
+        fee: f.fee,
+        currency: f.currency,
+      })),
+    };
+  }
+
+  return this.prisma.doctor.update({
+    where: { id },
+    data: updateData,
+  });
+}
+
     async updateDoctorByEmail(email: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
         const updateData: Prisma.DoctorUpdateInput = {}
 
