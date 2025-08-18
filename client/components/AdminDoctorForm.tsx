@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,6 +35,12 @@ import {
 } from "@/components/ui/form";
 import { IDoctor } from "@/types/patients";
 import { specialties } from "@/constants/constants";
+
+// Specialty type definition
+type Specialty = {
+  name: string;
+  subSpecialties: string[];
+};
 
 // Split the schema into individual tab schemas for step validation
 const createBasicInfoSchema = z
@@ -176,11 +181,6 @@ const tabOrder = [
   "fees",
 ];
 
-// Flatten the specialties and sub-specialties for the select input
-const allSpecializations = specialties.flatMap(specialty => 
-  [specialty.name, ...specialty.subSpecialties]
-);
-
 export function DoctorFormModal({
   isOpen,
   onClose,
@@ -194,6 +194,7 @@ export function DoctorFormModal({
 }) {
   const [activeTab, setActiveTab] = useState("basic");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+  const [selectedExpertise, setSelectedExpertise] = useState<string | null>(null);
 
   // Create different schemas for create and edit modes
   const createDoctorSchema = createBasicInfoSchema
@@ -424,7 +425,23 @@ export function DoctorFormModal({
     }
 
     try {
-      await currentTabSchema.parseAsync(form.getValues());
+      // Get all form values
+      const formValues = form.getValues();
+      
+      // Extract only the relevant fields for the current tab
+      let tabValues;
+      if (activeTab === "professional") {
+        tabValues = {
+          languages: formValues.languages || [],
+          specializations: formValues.specializations || [],
+          expertiseAreas: formValues.expertiseAreas || [],
+          experience: formValues.experience || { hospitals: [] }
+        };
+      } else {
+        tabValues = formValues;
+      }
+      
+      await currentTabSchema.parseAsync(tabValues);
       return true;
     } catch (error) {
       // Trigger form validation to show errors
@@ -435,6 +452,7 @@ export function DoctorFormModal({
 
   const handleNext = async () => {
     const isValid = await validateCurrentTab();
+
     if (!isValid) return;
 
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -450,16 +468,24 @@ export function DoctorFormModal({
     }
   };
 
+  // Get available expertise areas based on selected specializations
+  const getAvailableExpertiseAreas = () => {
+    const selectedSpecializations = form.getValues("specializations");
+    return selectedSpecializations.flatMap(spec => {
+      const specialty = specialties.find(s => s.name === spec);
+      return specialty ? [specialty.name, ...specialty.subSpecialties] : [];
+    });
+  };
+
   const TagInput = ({
     field,
     label,
-    suggestions,
   }: {
     field: "languages" | "specializations" | "expertiseAreas";
     label: string;
-    suggestions?: string[];
   }) => {
     const values = form.watch(field);
+    const specializations = form.watch("specializations");
 
     if (field === "specializations") {
       return (
@@ -491,59 +517,33 @@ export function DoctorFormModal({
                   ))}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <Select 
-                    value={selectedSpecialty || ""}
-                    onValueChange={(value: string) => {
-                      setSelectedSpecialty(value === "none" ? null : value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select specialty">
-                        {selectedSpecialty || "Select specialty"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Select specialty</SelectItem>
-                      {specialties.map((specialty) => (
-                        <SelectItem key={specialty.name} value={specialty.name}>
-                          {specialty.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    disabled={!selectedSpecialty}
-                    onValueChange={(value: string) => {
-                      if (value) {
-                        addTag(field, value);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sub-specialty">
-                        {selectedSpecialty ? "Select sub-specialty" : "First select specialty"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedSpecialty && (
-                        <>
-                          <SelectItem value={selectedSpecialty}>
-                            {selectedSpecialty} (General)
-                          </SelectItem>
-                          {specialties
-                            .find(s => s.name === selectedSpecialty)
-                            ?.subSpecialties.map(sub => (
-                              <SelectItem key={sub} value={sub}>
-                                {sub}
-                              </SelectItem>
-                            ))}
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select 
+                  value={selectedSpecialty || ""}
+                  onValueChange={(value: string) => {
+                    if (value && value !== "none") {
+                      addTag(field, value);
+                      setSelectedSpecialty(null);
+                      // Clear expertise areas when specializations change
+                      form.setValue("expertiseAreas", []);
+                    } else {
+                      setSelectedSpecialty(null);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select specialty">
+                      {selectedSpecialty || "Select specialty"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select specialty</SelectItem>
+                    {specialties.map((specialty) => (
+                      <SelectItem key={specialty.name} value={specialty.name}>
+                        {specialty.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <FormMessage />
             </FormItem>
@@ -552,6 +552,78 @@ export function DoctorFormModal({
       );
     }
 
+    if (field === "expertiseAreas") {
+      const availableExpertiseAreas = getAvailableExpertiseAreas();
+      
+      return (
+        <FormField
+          control={form.control}
+          name={field}
+          render={() => (
+            <FormItem>
+              <FormLabel>{label}</FormLabel>
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {values.map((value, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
+                      {value}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeTag(field, index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+                
+                {specializations.length === 0 ? (
+                  <div className="text-sm text-muted-foreground p-2 bg-muted rounded-md">
+                    Please select specializations first to choose expertise areas
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedExpertise || ""}
+                    onValueChange={(value: string) => {
+                      if (value && value !== "none") {
+                        addTag(field, value);
+                        setSelectedExpertise(null);
+                      } else {
+                        setSelectedExpertise(null);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select expertise area">
+                        {selectedExpertise || "Select expertise area"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select expertise area</SelectItem>
+                      {availableExpertiseAreas.map((expertise) => (
+                        <SelectItem key={expertise} value={expertise}>
+                          {expertise}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
+    // Default case for languages
     return (
       <FormField
         control={form.control}
@@ -580,14 +652,16 @@ export function DoctorFormModal({
                   </Badge>
                 ))}
               </div>
-              <Select onValueChange={(value: string) => addTag(field, value)}>
+              <Select 
+                onValueChange={(value: string) => addTag(field, value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {suggestions?.map((suggestion) => (
-                    <SelectItem key={suggestion} value={suggestion}>
-                      {suggestion}
+                  {commonLanguages.map((language) => (
+                    <SelectItem key={language} value={language}>
+                      {language}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -817,7 +891,6 @@ export function DoctorFormModal({
                     <TagInput
                       field="languages"
                       label="Languages"
-                      suggestions={commonLanguages}
                     />
 
                     <TagInput
@@ -825,11 +898,10 @@ export function DoctorFormModal({
                       label="Specializations"
                     />
 
-                    {/* <TagInput
+                    <TagInput
                       field="expertiseAreas"
                       label="Expertise Areas"
-                      suggestions={allSpecializations}
-                    /> */}
+                    />
 
                     {/* Experience Section */}
                     <div className="space-y-4">
@@ -1125,7 +1197,6 @@ export function DoctorFormModal({
                   </CardContent>
                 </Card>
               </TabsContent>
-
 
               {/* Schedule Tab */}
               <TabsContent value="schedule" className="space-y-4">
