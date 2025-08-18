@@ -14,7 +14,7 @@ export class DoctorAuthService implements IDoctorAuthService {
     ) {}
 
     async signin(email: string, password: string): Promise<Partial<IDoctor> | null> {
-        const user = await this.doctorRepo.findByEmail(email)
+        const user = await this.doctorRepo.findVerifiedByEmail(email)
         console.log("....",user);
 
         if (!user) {
@@ -42,8 +42,9 @@ export class DoctorAuthService implements IDoctorAuthService {
     async verifyOtp(email: string, otp: string): Promise<boolean> {
         console.log(email)
         const storedOtp = await redis.get(`otp:${email}`)
-        console.log(storedOtp)
-
+if (storedOtp === otp) {
+            await this.doctorRepo.updateDoctorByEmail(email, { isVerified: true })
+        }
         return storedOtp === otp
     }
 

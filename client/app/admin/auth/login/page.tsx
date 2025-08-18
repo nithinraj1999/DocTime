@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Stethoscope, Eye, EyeOff } from "lucide-react";
-
+import { signin } from "@/services/api/admin/adminAuthServices";
+import toast from "react-hot-toast";
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -18,19 +19,28 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
+    try{
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    const data = await signin({ email, password });
+    if (data.success) {
+      toast.success("Login successful! Redirecting...");
 
-    // Simulate login API call
-    setTimeout(() => {
-      if (email === "admin@medicenter.com" && password === "admin123") {
-        router.push("/dashboard"); // ✅ Next.js navigation
-      } else {
-        setError("Invalid credentials. Try admin@medicenter.com / admin123");
-      }
+      router.push("/admin/dashboard");
+    setIsLoading(false);
+
+    } else {
       setIsLoading(false);
-    }, 1000);
+
+      toast.error("Login failed. Please check your credentials.");
+    }
+
+    }catch(error){
+            setIsLoading(false);
+
+      toast.error("Login failed. Please check your credentials.");
+    }
   };
 
   return (

@@ -1,0 +1,33 @@
+// src/services/doctorMgtService.ts
+import apiClient from "@/lib/apiClient";
+import { IDoctor } from "@/types/patients";
+
+export async function createDoctor(payload: IDoctor) {
+  const res = await apiClient.post(`/admin/doctor-mgt/doctor`, payload);
+  return res.data;
+}
+
+export async function updateDoctor(id: string, payload: Partial<IDoctor>) {
+  const res = await apiClient.put(`/admin/doctor-mgt/doctor/${id}`, payload);
+  return res.data;
+}
+
+export async function blockDoctor(id: string) {
+  const res = await apiClient.patch(`/admin/doctor-mgt/doctor/${id}/block`);
+  return res.data;
+}
+
+export async function unblockDoctor(id: string) {
+  const res = await apiClient.patch(`/admin/doctor-mgt/doctor/${id}/unblock`);
+  return res.data;
+}
+
+export async function getAllDoctors() {
+  const res = await apiClient.get(`/admin/doctor-mgt/doctors`);
+  return res.data;
+}
+
+export async function getDoctorById(id: string) {
+  const res = await apiClient.get(`/admin/doctor-mgt/doctor/${id}`);
+  return res.data;
+}

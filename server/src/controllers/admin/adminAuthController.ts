@@ -16,7 +16,7 @@ export class AdminAuthController {
             })
 
             res.cookie('adminAccessToken', accessToken, {
-                httpOnly: true,
+                httpOnly: false,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 30 * 24 * 60 * 60 * 1000, 
                 sameSite: 'lax'

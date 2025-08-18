@@ -6,6 +6,7 @@ export interface IDoctor {
   phoneNumber: string;
   email: string;
   profileImage: string;
+  isVerified: boolean;
   bio: string;
   status: 'ACTIVE' | 'BLOCKED';
   languages: string[];

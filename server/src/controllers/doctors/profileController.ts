@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { inject, injectable } from 'tsyringe'
 import { IDoctorProfileServices } from '../../interfaces/IDoctorProfileServices'
+import { success } from 'zod'
 
 @injectable()
 export class DoctorProfileController {
@@ -15,6 +16,7 @@ export class DoctorProfileController {
             const newDoctor = await this.doctorProfileService.createDoctorProfile(doctorData)
 
             res.status(201).json({
+                success: true,
                 message: 'Doctor profile created successfully',
                 doctor: newDoctor
             })

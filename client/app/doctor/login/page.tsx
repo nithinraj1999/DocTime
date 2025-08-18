@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Heart, ArrowLeft, Stethoscope } from "lucide-react";
-
+import { doctorLogin } from "@/services/doctor/doctorAuthServices";
+import toast from "react-hot-toast";
 interface DoctorLoginForm {
   email: string;
   password: string;
@@ -24,9 +25,14 @@ export default function DoctorLogin() {
 
   const onSubmit = async (data: DoctorLoginForm) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await doctorLogin(data);
     console.log("Doctor login data:", data);
-    router.push("/doctor/dashboard");
+    if (response.success) {
+      toast.success("Login successful! Redirecting...");
+      router.push("/doctor/dashboard");
+    } else {
+      toast.error("Login failed: " + response.message);
+    }
     setIsLoading(false);
   };
 

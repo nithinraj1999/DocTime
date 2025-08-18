@@ -17,7 +17,7 @@ export class DoctorAuthController {
             })
 
             res.cookie('doctorAccessToken', accessToken, {
-                httpOnly: true,
+                httpOnly: false,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
                 sameSite: 'lax'

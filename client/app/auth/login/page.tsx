@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Heart, ArrowLeft } from "lucide-react";
 import { login } from "@/services/api/authServices";
 import toast from "react-hot-toast";
-
+import { useUserStore } from "@/store/userDetailStore";
 interface LoginForm {
   email: string;
   password: string;
@@ -26,6 +26,7 @@ interface LoginForm {
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useUserStore();
 
   const {
     register,
@@ -40,7 +41,7 @@ export default function LoginPage() {
       const response = await login(data);
       if (response.success) {
         toast.success("Login successful! Redirecting...");
-
+setUser(response.user);
         router.push("/dashboard");
         setIsLoading(false);
       }

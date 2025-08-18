@@ -5,6 +5,7 @@ export interface ICreateDoctorProfileDTO {
     password: string
     phoneNumber: string
     email: string
+    isVerified: boolean
     profileImage: string
     bio: string
     languages: string[]
@@ -37,6 +38,9 @@ export interface IDoctorRepository {
     createProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor>
     findById(id: string): Promise<{ id: string } | null>
     findByEmail(email: string): Promise<IDoctor | null>
+    
     updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>
+    updateDoctorByEmail(email: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> 
     getAllDoctors(): Promise<IDoctor[]>
+    findVerifiedByEmail(email: string): Promise<IDoctor | null>
 }

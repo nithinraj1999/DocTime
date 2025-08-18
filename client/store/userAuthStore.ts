@@ -13,8 +13,8 @@ export const useAuthStore = create<AuthState>()(
       setEmail: (email) => set({ email }),
     }),
     {
-      name: "auth-storage", // key in localStorage
-      storage: createJSONStorage(() => localStorage), // ✅ correct type-safe storage
+      name: "auth-storage", 
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
