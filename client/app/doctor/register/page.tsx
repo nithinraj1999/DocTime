@@ -186,7 +186,7 @@ export default function DoctorProfileCreate() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { doctorData, setDoctorData } = useDoctorRegistrationStore();
-const setEmail = useAuthStore((state) => state.setEmail);
+  const setEmail = useAuthStore((state) => state.setEmail);
 
   const {
     register,
@@ -200,7 +200,21 @@ const setEmail = useAuthStore((state) => state.setEmail);
     clearErrors,
     control,
     reset,
-  } = useForm<DoctorProfileForm>();
+  } = useForm<DoctorProfileForm>({
+    defaultValues: {
+      clinics: [
+        {
+          clinicName: "",
+          address: "",
+          city: "",
+          state: "",
+          country: "",
+          postalCode: "",
+          phoneNumber: "",
+        },
+      ],
+    },
+  });
 
   // Initialize form with store data
   useEffect(() => {
@@ -212,6 +226,20 @@ const setEmail = useAuthStore((state) => state.setEmail);
           ...doctorData.education,
           year: doctorData.education.year.toString(),
         },
+        // Ensure clinics array exists
+        clinics: doctorData.clinics?.length
+          ? doctorData.clinics
+          : [
+              {
+                clinicName: "",
+                address: "",
+                city: "",
+                state: "",
+                country: "",
+                postalCode: "",
+                phoneNumber: "",
+              },
+            ],
       };
       reset(formData);
     }
@@ -238,9 +266,7 @@ const setEmail = useAuthStore((state) => state.setEmail);
 
       const response = await registerDoctor(submissionData);
       if (response.success) {
-        setEmail(response.doctor.email)
-
-        // toast.success("Doctor profile created successfully!");
+        setEmail(response.doctor.email);
         router.push("/doctor/verify-otp");
       } else {
         toast.error("Failed to create doctor profile.");
@@ -252,6 +278,7 @@ const setEmail = useAuthStore((state) => state.setEmail);
       setIsLoading(false);
     }
   };
+
   const validateArrayField = (
     field: keyof DoctorProfileForm,
     minLength = 1
@@ -381,10 +408,7 @@ const setEmail = useAuthStore((state) => state.setEmail);
     validateArrayField(field);
   };
 
-  const handleSelectChange = (
-    field: keyof DoctorProfileForm,
-    value: string
-  ) => {
+  const handleSelectChange = (field: keyof DoctorProfileForm, value: string) => {
     setValue(field, value);
     validateSelectField(field);
   };
@@ -403,6 +427,32 @@ const setEmail = useAuthStore((state) => state.setEmail);
       "experience.hospitals",
       currentHospitals.filter((_, i) => i !== index)
     );
+  };
+
+  const addClinic = () => {
+    const currentClinics = getValues("clinics") || [];
+    setValue("clinics", [
+      ...currentClinics,
+      {
+        clinicName: "",
+        address: "",
+        city: "",
+        state: "",
+        country: "",
+        postalCode: "",
+        phoneNumber: "",
+      },
+    ]);
+  };
+
+  const removeClinic = (index: number) => {
+    const currentClinics = getValues("clinics") || [];
+    if (currentClinics.length > 1) {
+      setValue(
+        "clinics",
+        currentClinics.filter((_, i) => i !== index)
+      );
+    }
   };
 
   const addAvailability = () => {
@@ -878,7 +928,21 @@ const setEmail = useAuthStore((state) => state.setEmail);
           <div className="space-y-6">
             {(watchedValues.clinics || doctorData?.clinics || []).map(
               (clinic, index) => (
-                <div key={index} className="space-y-4">
+                <div key={index} className="space-y-4 border p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Clinic #{index + 1}</h4>
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeClinic(index)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor={`clinics.${index}.clinicName`}>
                       Clinic/Hospital Name *
@@ -1038,6 +1102,13 @@ const setEmail = useAuthStore((state) => state.setEmail);
               )
             )}
 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addClinic}
+            >
+              Add Another Clinic
+            </Button>
           </div>
         );
 
@@ -1159,6 +1230,7 @@ const setEmail = useAuthStore((state) => state.setEmail);
             )}
           </div>
         );
+
       case 7: // Consultation Fees
         return (
           <div className="space-y-6">
