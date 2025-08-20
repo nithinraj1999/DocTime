@@ -13,14 +13,16 @@ export class DoctorProfileController {
     async createDoctorProfile(req: Request, res: Response): Promise<void> {
         try {
             const doctorData = req.body
-            const newDoctor = await this.doctorProfileService.createDoctorProfile(doctorData)
+            console.log("....",req.body);
+            const file = req.file as Express.Multer.File | null
+            const newDoctor = await this.doctorProfileService.createDoctorProfile(doctorData, file!)
 
             res.status(201).json({
                 success: true,
                 message: 'Doctor profile created successfully',
                 doctor: newDoctor
-            })
-        } catch (error) {
+            }) 
+        } catch (error) { 
             res.status(500).json({ message: (error as Error).message })
         }
     }

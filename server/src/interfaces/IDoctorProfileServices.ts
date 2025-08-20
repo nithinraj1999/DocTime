@@ -35,7 +35,7 @@ export interface ICreateDoctorProfileDTO {
 }
 
 export interface IDoctorProfileServices {
-  createDoctorProfile(data:ICreateDoctorProfileDTO): Promise<IDoctor>;
+  createDoctorProfile(data:ICreateDoctorProfileDTO,file: Express.Multer.File ): Promise<IDoctor>;
   updateProfile(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>;
   getProfile(id: string): Promise<Partial<IDoctor>>;
 }

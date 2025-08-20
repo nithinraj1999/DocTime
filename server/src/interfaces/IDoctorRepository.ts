@@ -35,7 +35,7 @@ export interface ICreateDoctorProfileDTO {
 }
 
 export interface IDoctorRepository {
-    createProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor>
+    createProfile(data: ICreateDoctorProfileDTO,profileImage: string): Promise<IDoctor>
     findById(id: string): Promise<{ id: string } | null>
     findByEmail(email: string): Promise<IDoctor | null>
     

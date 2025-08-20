@@ -89,6 +89,7 @@ export const useDoctorRegistrationStore = create<DoctorRegistrationStore>()(
       },
       setDoctorData: (data) =>
         set((state) => ({
+          
           doctorData: { ...state.doctorData, ...data },
         })),
       resetDoctorData: () =>

@@ -4,6 +4,7 @@ import { IDoctor } from '../../entities/doctor'
 import { IDoctorRepository } from '../../interfaces/IDoctorRepository'
 import { IEmailService } from '../../config/nodeMailer'
 import redis from '../../config/redis'
+import { S3Bucket } from '../../config/awsS3'
 export interface ICreateDoctorProfileDTO {
     userId: string
     fullName: string
@@ -49,10 +50,14 @@ export class DoctorProfileService implements IDoctorProfileServices {
         @inject('IEmailService') private emailService: IEmailService
     ) {}
 
-    async createDoctorProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor> {
+    async createDoctorProfile(data: ICreateDoctorProfileDTO,file: Express.Multer.File): Promise<IDoctor> {
         const { password, confirmPassword } = data
+        const s3 = new S3Bucket()
+        const profileImageUrl = await s3.uploadProfilePic(file.originalname, file.buffer, file.mimetype, 'profile-pics')
         if (password !== confirmPassword) throw new Error('Passwords do not match')
-        const doctor = await this.doctorRepository.createProfile(data)
+
+            
+        const doctor = await this.doctorRepository.createProfile(data, profileImageUrl)
         const otp = await this.generateAndStoreOtp(data.email)
 
         await this.emailService.sendEmail(data.email, otp)

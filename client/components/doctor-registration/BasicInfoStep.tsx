@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import React from "react";
-import { UseFormReturn, FieldErrors } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,11 @@ import { DoctorProfileForm } from "@/types/doctorRegistration";
 interface BasicInfoStepProps {
   form: UseFormReturn<DoctorProfileForm>;
   doctorData?: any;
-  onArrayFieldChange: (field: keyof DoctorProfileForm, value: string, checked: boolean) => void;
+  onArrayFieldChange: (
+    field: keyof DoctorProfileForm,
+    value: string,
+    checked: boolean
+  ) => void;
   onSelectChange: (field: keyof DoctorProfileForm, value: string) => void;
 }
 
@@ -27,10 +31,27 @@ export default function BasicInfoStep({
   const {
     register,
     watch,
+    setValue,
     formState: { errors },
   } = form;
 
   const watchedValues = watch();
+
+  // helper: convert File -> Blob URL
+  const fileToBlobUrl = (file: File) => {
+    return URL.createObjectURL(file);
+  };
+
+  // handler for file input
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const blobUrl = fileToBlobUrl(file);
+
+      // remove old value (if any) and set new one
+      setValue("profileImage", blobUrl, { shouldValidate: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -44,9 +65,7 @@ export default function BasicInfoStep({
           className={errors.fullName ? "border-destructive" : ""}
         />
         {errors.fullName && (
-          <p className="text-sm text-destructive">
-            {errors.fullName.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.fullName.message}</p>
         )}
       </div>
 
@@ -67,9 +86,7 @@ export default function BasicInfoStep({
           className={errors.email ? "border-destructive" : ""}
         />
         {errors.email && (
-          <p className="text-sm text-destructive">
-            {errors.email.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
 
@@ -90,9 +107,7 @@ export default function BasicInfoStep({
           className={errors.password ? "border-destructive" : ""}
         />
         {errors.password && (
-          <p className="text-sm text-destructive">
-            {errors.password.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
       </div>
 
@@ -140,20 +155,28 @@ export default function BasicInfoStep({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="profileImage">Profile Photo</Label>
+        <Label htmlFor="profileImage">Profile Photo *</Label>
         <Input
           id="profileImage"
-          placeholder="Profile Image URL"
-          {...register("profileImage", {
-            required: "Profile image is required",
-            pattern: {
-              value: /^(https?:\/\/.*\.(?:png|jpg|jpeg))$/,
-              message: "Enter a valid image URL",
-            },
-          })}
-          defaultValue={doctorData?.profileImage || ""}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
           className={errors.profileImage ? "border-destructive" : ""}
         />
+        {watchedValues.profileImage && (
+          <div className="mt-2">
+            <img
+              src={watchedValues.profileImage}
+              alt="Preview"
+              className="w-24 h-24 object-cover rounded-full"
+            />
+          </div>
+        )}
+        {errors.profileImage && (
+          <p className="text-sm text-destructive">
+            {errors.profileImage.message}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -176,9 +199,7 @@ export default function BasicInfoStep({
           </div>
         </RadioGroup>
         {errors.gender && (
-          <p className="text-sm text-destructive">
-            {errors.gender.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.gender.message}</p>
         )}
       </div>
 
@@ -205,11 +226,7 @@ export default function BasicInfoStep({
                   doctorData?.languages?.includes(language)
                 }
                 onCheckedChange={(checked: boolean) =>
-                  onArrayFieldChange(
-                    "languages",
-                    language,
-                    checked as boolean
-                  )
+                  onArrayFieldChange("languages", language, checked as boolean)
                 }
               />
               <Label htmlFor={language}>{language}</Label>

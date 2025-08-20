@@ -7,7 +7,7 @@ export const upload = multer({
   limits: {
     fileSize: 100 * 1024 * 1024, // 100 MB
     fieldSize: 100 * 1024 * 1024, // 100 MB
-    fields: 10, 
+    fields: 50, 
     files: 1, 
   },
   fileFilter: (req, file, cb: FileFilterCallback) => {

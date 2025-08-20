@@ -3,7 +3,7 @@ export interface ICreateDoctorProfileDTO {
     gender: string
     password: string
     phoneNumber: string
-    isVerified:boolean
+    isVerified: boolean
     email: string
     profileImage: string
     bio: string
@@ -13,27 +13,10 @@ export interface ICreateDoctorProfileDTO {
     education: any // JSON
     experience: any // JSON
     status: 'ACTIVE' | 'BLOCKED'
-    clinics: {
-        clinicName: string
-        address: string
-        city: string
-        state: string
-        country: string
-        postalCode: string
-        phoneNumber: string
-    }[]
-    availability: {
-        dayOfWeek: string
-        startTime: string
-        endTime: string
-    }[]
-    consultationFees: {
-        mode: string
-        fee: number
-        currency: string
-    }[]
+    clinics: any // JSON
+    availability: any
+    consultationFees: any
 }
-
 import { PrismaClient, Prisma, Doctor } from '@prisma/client'
 import { injectable } from 'tsyringe'
 import { IDoctor } from '../entities/doctor'
@@ -44,7 +27,7 @@ import bcrypt from 'bcrypt'
 export class DoctorRepository implements IDoctorRepository {
     private readonly prisma = new PrismaClient()
 
-    async createProfile(data: ICreateDoctorProfileDTO): Promise<IDoctor> {
+    async createProfile(data: ICreateDoctorProfileDTO, profileImage: string): Promise<IDoctor> {
         const hashedPassword = await bcrypt.hash(data.password, 10)
 
         const doctor = await this.prisma.doctor.create({
@@ -54,21 +37,22 @@ export class DoctorRepository implements IDoctorRepository {
                 password: hashedPassword,
                 phoneNumber: data.phoneNumber,
                 email: data.email,
-                profileImage: data.profileImage,
+                profileImage: profileImage,
                 bio: data.bio,
                 languages: data.languages,
                 specializations: data.specializations,
                 expertiseAreas: data.expertiseAreas,
-                education: data.education,
-                experience: data.experience,
+                education: JSON.parse(data.education),
+                experience: JSON.parse(data.experience),
+
                 clinics: {
-                    create: data.clinics
+                    create: JSON.parse(data.clinics)
                 },
                 availability: {
-                    create: data.availability
+                    create: JSON.parse(data.availability)
                 },
                 consultationFees: {
-                    create: data.consultationFees
+                    create: JSON.parse(data.consultationFees)
                 }
             }
         })
@@ -78,12 +62,11 @@ export class DoctorRepository implements IDoctorRepository {
     async findById(id: string): Promise<{ id: string } | null> {
         return this.prisma.doctor.findUnique({
             where: { id },
-                        include: {
+            include: {
                 clinics: true,
                 availability: true,
-                consultationFees: true,
-            },
-
+                consultationFees: true
+            }
         })
     }
     async findByEmail(email: string): Promise<IDoctor | null> {
@@ -132,67 +115,67 @@ export class DoctorRepository implements IDoctorRepository {
     //     })
     // }
     async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
-  const updateData: Prisma.DoctorUpdateInput = {};
+        const updateData: Prisma.DoctorUpdateInput = {}
 
-  if (data.fullName !== undefined) updateData.fullName = data.fullName;
-  if (data.gender !== undefined) updateData.gender = data.gender;
-  if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
-  if (data.email !== undefined) updateData.email = data.email;
-  if (data.profileImage !== undefined) updateData.profileImage = data.profileImage;
-  if (data.bio !== undefined) updateData.bio = data.bio;
-  if (data.languages !== undefined) updateData.languages = data.languages;
-  if (data.specializations !== undefined) updateData.specializations = data.specializations;
-  if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas;
+        if (data.fullName !== undefined) updateData.fullName = data.fullName
+        if (data.gender !== undefined) updateData.gender = data.gender
+        if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
+        if (data.email !== undefined) updateData.email = data.email
+        if (data.profileImage !== undefined) updateData.profileImage = data.profileImage
+        if (data.bio !== undefined) updateData.bio = data.bio
+        if (data.languages !== undefined) updateData.languages = data.languages
+        if (data.specializations !== undefined) updateData.specializations = data.specializations
+        if (data.expertiseAreas !== undefined) updateData.expertiseAreas = data.expertiseAreas
 
-  // JSON fields
-  if (data.education !== undefined) updateData.education = data.education;
-  if (data.experience !== undefined) updateData.experience = data.experience;
+        // JSON fields
+        if (data.education !== undefined) updateData.education = data.education
+        if (data.experience !== undefined) updateData.experience = data.experience
 
-  if (data.status !== undefined) updateData.status = data.status;
+        if (data.status !== undefined) updateData.status = data.status
 
-  // Relations
-  if (data.clinics !== undefined) {
-    updateData.clinics = {
-      deleteMany: {},
-      create: data.clinics.map(c => ({
-        clinicName: c.clinicName,
-        address: c.address,
-        city: c.city,
-        state: c.state,
-        country: c.country,
-        postalCode: c.postalCode,
-        phoneNumber: c.phoneNumber,
-      })),
-    };
-  }
+        // Relations
+        if (data.clinics !== undefined) {
+            updateData.clinics = {
+                deleteMany: {},
+                create: data.clinics.map((c: any) => ({
+                    clinicName: c.clinicName,
+                    address: c.address,
+                    city: c.city,
+                    state: c.state,
+                    country: c.country,
+                    postalCode: c.postalCode,
+                    phoneNumber: c.phoneNumber
+                }))
+            }
+        }
 
-  if (data.availability !== undefined) {
-    updateData.availability = {
-      deleteMany: {},
-      create: data.availability.map(a => ({
-        dayOfWeek: a.dayOfWeek,
-        startTime: a.startTime,
-        endTime: a.endTime,
-      })),
-    };
-  }
+        if (data.availability !== undefined) {
+            updateData.availability = {
+                deleteMany: {},
+                create: data.availability.map((a: any) => ({
+                    dayOfWeek: a.dayOfWeek,
+                    startTime: a.startTime,
+                    endTime: a.endTime
+                }))
+            }
+        }
 
-  if (data.consultationFees !== undefined) {
-    updateData.consultationFees = {
-      deleteMany: {},
-      create: data.consultationFees.map(f => ({
-        mode: f.mode,
-        fee: f.fee,
-        currency: f.currency,
-      })),
-    };
-  }
+        if (data.consultationFees !== undefined) {
+            updateData.consultationFees = {
+                deleteMany: {},
+                create: data.consultationFees.map((f: any) => ({
+                    mode: f.mode,
+                    fee: f.fee,
+                    currency: f.currency
+                }))
+            }
+        }
 
-  return this.prisma.doctor.update({
-    where: { id },
-    data: updateData,
-  });
-}
+        return this.prisma.doctor.update({
+            where: { id },
+            data: updateData
+        })
+    }
 
     async updateDoctorByEmail(email: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
         const updateData: Prisma.DoctorUpdateInput = {}
@@ -241,9 +224,9 @@ export class DoctorRepository implements IDoctorRepository {
             include: {
                 clinics: true,
                 availability: true,
-                consultationFees: true,
-            },
-        });
+                consultationFees: true
+            }
+        })
     }
 
     async findVerifiedByEmail(email: string): Promise<IDoctor | null> {

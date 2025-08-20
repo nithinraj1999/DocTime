@@ -1,10 +1,12 @@
 import apiClient from "@/lib/apiClient";
 import { IDoctor } from "@/types/patients";
-import error from "next/error";
 
 export async function registerDoctor(data: Record<string, any>) {
   try {
-    const res = await apiClient.post("/doctor/profile", data);
+    
+    const res = await apiClient.post("/doctor/profile", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   } catch (error: any) {
     throw new Error(

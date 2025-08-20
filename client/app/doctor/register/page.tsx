@@ -41,6 +41,7 @@ import {
   AvailabilityStep,
   ConsultationFeesStep,
 } from "@/components/doctor-registration";
+import { log } from "console";
 
 const steps = [
   {
@@ -121,7 +122,6 @@ export default function DoctorProfileCreate() {
     reset,
   } = form;
 
-  // Initialize form with store data
   useEffect(() => {
     if (doctorData) {
       // Convert number year to string for the form
@@ -151,38 +151,84 @@ export default function DoctorProfileCreate() {
   }, [doctorData, reset]);
 
   const watchedValues = watch();
+async function blobUrlToFile(blobUrl: string, filename: string): Promise<File> {
+  const res = await fetch(blobUrl); // Fetch blob from the blob URL
+  const blob = await res.blob();    // Convert to blob
+  return new File([blob], filename, { type: blob.type }); // Wrap into File
+}
 
-  const onSubmit = async (data: DoctorProfileForm) => {
-    // Only submit if we're on the final step
-    if (currentStep !== 7) {
-      return;
-    }
+const onSubmit = async (data: DoctorProfileForm) => {
+  if (currentStep !== 7) return;
+  console.log("Submitting doctor data:", data);
 
-    console.log("Submitting doctor data:", data);
-    setIsLoading(true);
-    try {
-      const submissionData = {
-        ...data,
-        education: {
-          ...data.education,
-          year: Number(data.education.year),
-        },
-      };
+  const formData = new FormData();
 
-      const response = await registerDoctor(submissionData);
-      if (response.success) {
-        setEmail(response.doctor.email);
-        router.push("/doctor/verify-otp");
-      } else {
-        toast.error("Failed to create doctor profile.");
-      }
-    } catch (error) {
+  if (data.profileImage) {
+    const blobToFile = await blobUrlToFile(data.profileImage, "profileImage.jpg");
+    console.log("Converted blob to file:", blobToFile);
+    formData.append("profileImage", blobToFile);
+  }
+
+  // ✅ Append primitive fields
+  formData.append("fullName", data.fullName);
+  formData.append("email", data.email);
+  formData.append("password", data.password);
+  formData.append("confirmPassword", data.confirmPassword);
+  formData.append("gender", data.gender);
+  formData.append("phoneNumber", data.phoneNumber);
+  formData.append("bio", data.bio || "");
+  formData.append("experience", JSON.stringify(data.experience));
+
+
+
+// ✅ Arrays
+data.languages.forEach((lang: string) => {
+  formData.append("languages[]", lang);
+});
+
+data.specializations.forEach((spec: string) => {
+  formData.append("specializations[]", spec);
+});
+
+data.expertiseAreas.forEach((area: string) => {
+  formData.append("expertiseAreas[]", area);
+});
+
+// ✅ Nested objects
+formData.append(
+  "education",
+  JSON.stringify({
+    ...data.education,
+    year: Number(data.education.year),
+  })
+);
+
+// data.experience.forEach((exp: any, index: number) => {
+//   formData.append(`experience[${index}]`, JSON.stringify(exp));
+// });
+
+formData.append("clinics", JSON.stringify(data.clinics));
+formData.append("availability", JSON.stringify(data.availability));
+formData.append("consultationFees", JSON.stringify(data.consultationFees));
+  console.log("Submitting doctor data:", formData);
+
+  setIsLoading(true);
+  try {
+    const response = await registerDoctor(formData);
+    if (response.success) {
+      setEmail(response.doctor.email);
+      router.push("/doctor/verify-otp");
+    } else {
       toast.error("Failed to create doctor profile.");
-      console.error("Error submitting form:", error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (error) {
+    toast.error("Failed to create doctor profile.");
+    console.error("Error submitting form:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const validateArrayField = (
     field: keyof DoctorProfileForm,
@@ -288,6 +334,8 @@ export default function DoctorProfileCreate() {
           year: Number(watchedValues.education?.year) || 0,
         },
       };
+      console.log({ ...doctorData, ...formData });
+      
       setDoctorData({ ...doctorData, ...formData });
       setCurrentStep(currentStep + 1);
     }
