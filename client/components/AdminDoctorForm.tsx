@@ -201,13 +201,13 @@ export function DoctorFormModal({
     const file = event.target.files?.[0];
     console.log("lllllllll,.....",file);
     if(file)setProfileImage(file);
-    // if (file) {
-    //   const reader = new FileReader();
-    //   reader.onload = (e) => {
-    //     setAvatarPreview(e.target?.result as string);
-    //   };
-    //   reader.readAsDataURL(file);
-    // }
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   // Create different schemas for create and edit modes
   const createDoctorSchema = createBasicInfoSchema
@@ -840,7 +840,7 @@ export function DoctorFormModal({
          <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={ doctor?.profileImage} />
+                    <AvatarImage src={avatarPreview || doctor?.profileImage} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                       {doctor?.fullName
                         .split(" ")

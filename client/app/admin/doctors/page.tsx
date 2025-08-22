@@ -135,7 +135,7 @@ formData.append("consultationFees", JSON.stringify(doctorData.consultationFees))
         setDoctors((prev) =>
           prev.map((doctor) =>
             doctor.id === editingDoctor.id
-              ? { ...doctor, ...doctorData, updatedAt: new Date() }
+              ? { ...doctor, ...doctorData, profileImage: doctorData.profileImage ? URL.createObjectURL(doctorData.profileImage) : "", updatedAt: new Date() }
               : doctor
           )
         );
@@ -147,6 +147,7 @@ formData.append("consultationFees", JSON.stringify(doctorData.consultationFees))
       const newDoctor: IDoctor = {
         id: Date.now().toString(),
         ...doctorData,
+        profileImage: doctorData.profileImage ? URL.createObjectURL(doctorData.profileImage) : "",
         status: "ACTIVE" as const,
         createdAt: new Date(),
         updatedAt: new Date(),
