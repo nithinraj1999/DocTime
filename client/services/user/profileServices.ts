@@ -1,5 +1,4 @@
 import apiClient from "@/lib/apiClient";
-import { IUser } from "@/store/userDetailStore"; 
 
 export async function getProfile(id: string){
   try {
@@ -10,9 +9,11 @@ export async function getProfile(id: string){
   }
 }
 
-export async function updateProfile(id: string, data: Partial<IUser>) {
+export async function updateProfile(id: string, data: FormData) {
   try {
-    const res = await apiClient.put(`/profile/${id}`, data);
+    const res = await apiClient.put(`/profile/${id}`, data,{
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to update profile");

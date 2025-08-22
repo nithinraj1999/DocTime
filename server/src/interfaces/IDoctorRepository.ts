@@ -39,7 +39,7 @@ export interface IDoctorRepository {
     findById(id: string): Promise<{ id: string } | null>
     findByEmail(email: string): Promise<IDoctor | null>
     
-    updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>
+    updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>,profileImage:string|null): Promise<IDoctor>
     updateDoctorByEmail(email: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> 
     getAllDoctors(): Promise<IDoctor[]>
     findVerifiedByEmail(email: string): Promise<IDoctor | null>

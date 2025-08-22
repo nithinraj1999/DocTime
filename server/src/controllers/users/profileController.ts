@@ -11,6 +11,8 @@ export class ProfileController {
     try {
       const userId = req.params.id;
       const userData = req.body
+      console.log(req.file);
+      
       console.log(`Updating profile for user ID: ${userId}`, userData);
       
       if(!userId) {

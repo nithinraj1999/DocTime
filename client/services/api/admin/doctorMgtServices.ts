@@ -1,16 +1,23 @@
-// src/services/doctorMgtService.ts
 import apiClient from "@/lib/apiClient";
 import { IDoctor } from "@/types/patients";
 
 export async function createDoctor(payload: IDoctor) {
-  const res = await apiClient.post(`/admin/doctor-mgt/doctor`, payload);
+  const res = await apiClient.post(`/admin/doctor-mgt/doctor`, payload,{
+    headers: {
+      "Content-Type": "multipart/form-data"
+    } 
+  });
   return res.data;
 }
 
-export async function updateDoctor(id: string, payload: Partial<IDoctor>) {
-  const res = await apiClient.put(`/admin/doctor-mgt/doctor/${id}`, payload);
+export async function updateDoctor(id: string, payload: FormData) {
+  const res = await apiClient.put(`/admin/doctor-mgt/doctor/${id}`, payload,{
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
   return res.data;
-}
+}   
 
 export async function blockDoctor(id: string) {
   const res = await apiClient.patch(`/admin/doctor-mgt/doctor/${id}/block`);

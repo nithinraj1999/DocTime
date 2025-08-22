@@ -28,12 +28,6 @@ import {
   Save,
   Plus,
   X,
-  Stethoscope,
-  GraduationCap,
-  MapPin,
-  DollarSign,
-  Clock,
-  Languages,
 } from "lucide-react";
 import { IDoctor } from "@/types/patients";
 import { updateDoctorProfile } from "@/services/doctor/doctorProfileServices";
@@ -41,6 +35,7 @@ import toast from "react-hot-toast";
 import { specialties } from "@/constants/constants";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { languages } from "@/constants/constants";
+import { profile } from "console";
 interface DoctorEditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -55,7 +50,7 @@ export default function DoctorEditProfileModal({
   doctor,
 }: DoctorEditProfileModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState(doctor.profileImage);
+  const [avatarPreview, setAvatarPreview] = useState<string | ArrayBuffer | null>(null);
   const [activeTab, setActiveTab] = useState("basic");
   console.log("Doctor data in modal:", doctor);
   const formatTime = (time: string) => {
@@ -150,20 +145,73 @@ const formattedDoctor = {
 
   const feeModes = ["In-person", "Online", "Video Consultation", "Home Visit"];
   const currencies = ["INR", "USD", "EUR", "GBP"];
+  const [profileImage, setProfileImage] = useState<File | null>(null);
 
   const onSubmit = async (data: IDoctor) => {
     setIsLoading(true);
+  console.log("Submitting doctor data:", data);
+
+  const formData = new FormData();
+
+
+  // ✅ Append primitive fields
+  formData.append("fullName", data.fullName);
+  formData.append("email", data.email);
+ 
+  formData.append("gender", data.gender);
+  formData.append("phoneNumber", data.phoneNumber);
+  formData.append("bio", data.bio || "");
+  formData.append("experience", JSON.stringify(data.experience));
+  if (profileImage) formData.append("profileImage", profileImage);
+
+
+
+// ✅ Arrays
+data.languages.forEach((lang: string) => {
+  formData.append("languages[]", lang);
+});
+
+data.specializations.forEach((spec: string) => {
+  formData.append("specializations[]", spec);
+});
+
+data.expertiseAreas.forEach((area: string) => {
+  formData.append("expertiseAreas[]", area);
+});
+
+// ✅ Nested objects
+formData.append(
+  "education",
+  JSON.stringify({
+    ...data.education,
+    year: Number(data.education.year),
+  })
+);
+
+// data.experience.forEach((exp: any, index: number) => {
+//   formData.append(`experience[${index}]`, JSON.stringify(exp));
+// });
+
+formData.append("clinics", JSON.stringify(data.clinics));
+formData.append("availability", JSON.stringify(data.availability));
+formData.append("consultationFees", JSON.stringify(data.consultationFees));
+  console.log("Submitting doctor data:", formData);
+
 
     try {
       const updatedDoctor: IDoctor = {
         ...data,
-        profileImage: avatarPreview,
+        profileImage: data.profileImage,
       };
       console.log("......", updatedDoctor);
 
-      const response = await updateDoctorProfile(doctor.id, updatedDoctor);
+      const response = await updateDoctorProfile(doctor.id, formData);
       if (response.success) {
         toast.success("Profile updated successfully");
+const updatedDoctor: IDoctor = {
+        ...data,
+        profileImage: response.doctor.profileImage,
+      };
         onUpdateProfile(updatedDoctor);
         onClose();
       } else {
@@ -182,9 +230,10 @@ const formattedDoctor = {
     setActiveTab("basic");
     onClose();
   };
-
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log("lllllllll,.....",file);
+    if(file)setProfileImage(file);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -222,7 +271,7 @@ console.log("Availability values:", watch("availability"));
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={avatarPreview} />
+                    <AvatarImage src={avatarPreview || doctor.profileImage} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                       {doctor.fullName
                         .split(" ")

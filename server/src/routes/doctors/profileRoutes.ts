@@ -12,7 +12,7 @@ const profileController = container.resolve<DoctorProfileController>('DoctorProf
  
 
 router.post('/profile',upload.single('profileImage'), (req, res) => profileController.createDoctorProfile(req, res));
-router.put('/profile/:id', (req, res) => profileController.updateDoctorProfile(req, res));
+router.put('/profile/:id',upload.single('profileImage'), (req, res) => profileController.updateDoctorProfile(req, res));
 router.get('/profile/:id', (req, res) => profileController.getDoctorProfile(req, res)); 
 
 

@@ -3,7 +3,7 @@ import { IDoctor } from "../entities/doctor"
 
 export interface IDoctorMgtService {
     createDoctor(data: ICreateDoctorProfileDTO): Promise<IDoctor>
-    updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor>
+    updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>, file?: Express.Multer.File): Promise<IDoctor>
     blockDoctor(id: string): Promise<IDoctor>
     unblockDoctor(id: string): Promise<IDoctor>
     getAllDoctors(): Promise<IDoctor[]>

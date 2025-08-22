@@ -13,202 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IDoctor } from "@/types/patients";
 import { DoctorFormModal } from "@/components/AdminDoctorForm";
-// Mock data - in real app this would come from API
 import { createDoctor } from "@/services/api/admin/doctorMgtServices";
 import toast from "react-hot-toast";
 import { getAllDoctors } from "@/services/api/admin/doctorMgtServices";
 import { updateDoctor } from "@/services/api/admin/doctorMgtServices";
-// const mockDoctors: IDoctor[] = [
-//   {
-//     id: "1",
-//     fullName: "Dr. Sarah Wilson",
-//     password: "hashed_password",
-//     gender: "Female",
-//     phoneNumber: "+91-9876543210",
-//     email: "sarah.wilson@hospital.com",
-//     profileImage: "",
-//     bio: "Experienced cardiologist with 15 years of practice.",
-//     isVerified: true,
-//     status: "ACTIVE",
-//     languages: ["English", "Hindi"],
-//     specializations: ["Cardiology", "Internal Medicine"],
-//     expertiseAreas: ["Heart Surgery", "Cardiac Catheterization"],
-//     education: {
-//       degree: "MBBS, MD - Cardiology",
-//       university: "AIIMS Delhi",
-//       year: 2005,
-//     },
-//     experience: {
-//       hospitals: [
-//         { name: "Apollo Hospitals", years: "2010-2015" },
-//         { name: "Fortis Escorts Heart Institute", years: "2015-Present" },
-//       ],
-//     },
-//     clinics: [
-//       {
-//         clinicName: "Heart Care Clinic",
-//         address: "123 MG Road",
-//         city: "Bangalore",
-//         state: "Karnataka",
-//         country: "India",
-//         postalCode: "560001",
-//         phoneNumber: "+91-9988776655",
-//       },
-//     ],
-//     availability: [
-//       {
-//         dayOfWeek: "Monday",
-//         startTime: "09:00",
-//         endTime: "13:00",
-//       },
-//       {
-//         dayOfWeek: "Wednesday",
-//         startTime: "15:00",
-//         endTime: "19:00",
-//       },
-//     ],
-//     consultationFees: [
-//       {
-//         mode: "In-person",
-//         fee: 800.0,
-//         currency: "INR",
-//       },
-//       {
-//         mode: "Online",
-//         fee: 500.0,
-//         currency: "INR",
-//       },
-//     ],
-//     createdAt: new Date("2024-01-15"),
-//     updatedAt: new Date("2024-01-15"),
-//   },
-//   {
-//     id: "2",
-//     fullName: "Dr. Michael Chen",
-//     password: "hashed_password",
-//     gender: "Male",
-//     phoneNumber: "+91-9876543211",
-//     email: "michael.chen@hospital.com",
-//     profileImage: "",
-//     bio: "Pediatric specialist focusing on child development.",
-//     isVerified: true,
-//     status: "ACTIVE",
-//     languages: ["English", "Hindi"],
-//     specializations: ["Pediatrics"],
-//     expertiseAreas: ["Child Development", "Neonatal Care"],
-//     education: {
-//       degree: "MBBS, MD - Pediatrics",
-//       university: "PGIMER Chandigarh",
-//       year: 2008,
-//     },
-//     experience: {
-//       hospitals: [
-//         { name: "Fortis Hospital", years: "2012-2018" },
-//         { name: "Rainbow Children's Hospital", years: "2018-Present" },
-//       ],
-//     },
-//     clinics: [
-//       {
-//         clinicName: "Kids Care Clinic",
-//         address: "456 Brigade Road",
-//         city: "Bangalore",
-//         state: "Karnataka",
-//         country: "India",
-//         postalCode: "560025",
-//         phoneNumber: "+91-9988776656",
-//       },
-//     ],
-//     availability: [
-//       {
-//         dayOfWeek: "Tuesday",
-//         startTime: "10:00",
-//         endTime: "14:00",
-//       },
-//       {
-//         dayOfWeek: "Thursday",
-//         startTime: "16:00",
-//         endTime: "20:00",
-//       },
-//     ],
-//     consultationFees: [
-//       {
-//         mode: "In-person",
-//         fee: 600.0,
-//         currency: "INR",
-//       },
-//       {
-//         mode: "Online",
-//         fee: 400.0,
-//         currency: "INR",
-//       },
-//     ],
-//     createdAt: new Date("2024-01-16"),
-//     updatedAt: new Date("2024-01-16"),
-//   },
-//   {
-//     id: "3",
-//     fullName: "Dr. Emily Rodriguez",
-//     password: "hashed_password",
-//     gender: "Female",
-//     phoneNumber: "+91-9876543212",
-//     email: "emily.rodriguez@hospital.com",
-//     profileImage: "",
-//     bio: "Orthopedic surgeon specializing in sports medicine.",
-//     isVerified: false,
-//     status: "BLOCKED",
-//     languages: ["English", "Hindi", "Spanish"],
-//     specializations: ["Orthopedics", "Sports Medicine"],
-//     expertiseAreas: ["Joint Replacement", "Sports Injuries"],
-//     education: {
-//       degree: "MBBS, MS - Orthopedics",
-//       university: "King George Medical University",
-//       year: 2010,
-//     },
-//     experience: {
-//       hospitals: [
-//         { name: "Manipal Hospital", years: "2014-2020" },
-//         { name: "Sports Medicine Center", years: "2020-Present" },
-//       ],
-//     },
-//     clinics: [
-//       {
-//         clinicName: "Sports Ortho Clinic",
-//         address: "789 Commercial Street",
-//         city: "Bangalore",
-//         state: "Karnataka",
-//         country: "India",
-//         postalCode: "560001",
-//         phoneNumber: "+91-9988776657",
-//       },
-//     ],
-//     availability: [
-//       {
-//         dayOfWeek: "Friday",
-//         startTime: "09:00",
-//         endTime: "17:00",
-//       },
-//     ],
-//     consultationFees: [
-//       {
-//         mode: "In-person",
-//         fee: 1000.0,
-//         currency: "INR",
-//       },
-//     ],
-//     createdAt: new Date("2024-01-17"),
-//     updatedAt: new Date("2024-01-17"),
-//   },
-// ];
-
 export default function DoctorManagement() {
   const [doctors, setDoctors] = useState<IDoctor[]>([]);
 
@@ -275,8 +87,49 @@ useEffect(() => {
 
   const handleSaveDoctor = async(doctorData: any) => {
     if (editingDoctor) {
-      // Update existing doctor
-      const response  = await updateDoctor(editingDoctor.id, doctorData);
+      const formData = new FormData();
+  formData.append("fullName", doctorData.fullName);
+  formData.append("email", doctorData.email);
+  formData.append("password", doctorData.password);
+  formData.append("confirmPassword", doctorData.confirmPassword);
+  formData.append("gender", doctorData.gender);
+  formData.append("phoneNumber", doctorData.phoneNumber);
+  formData.append("bio", doctorData.bio || "");
+  formData.append("experience", JSON.stringify(doctorData.experience));
+
+  if(doctorData.profileImage)
+  formData.append("profileImage", doctorData.profileImage);
+
+// ✅ Arrays
+doctorData.languages.forEach((lang: string) => {
+  formData.append("languages[]", lang);
+});
+
+doctorData.specializations.forEach((spec: string) => {
+  formData.append("specializations[]", spec);
+});
+
+doctorData.expertiseAreas.forEach((area: string) => {
+  formData.append("expertiseAreas[]", area);
+});
+
+// ✅ Nested objects
+formData.append(
+  "education",
+  JSON.stringify({
+    ...doctorData.education,
+    year: Number(doctorData.education.year),   
+  })
+);
+
+
+
+formData.append("clinics", JSON.stringify(doctorData.clinics));
+formData.append("availability", JSON.stringify(doctorData.availability));
+formData.append("consultationFees", JSON.stringify(doctorData.consultationFees));
+  console.log("Submitting doctor data:", formData);
+
+      const response  = await updateDoctor(editingDoctor.id, formData);
       if(response.success) {
         toast.success("Doctor updated successfully");
         setDoctors((prev) =>

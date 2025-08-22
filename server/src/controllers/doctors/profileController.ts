@@ -30,13 +30,16 @@ export class DoctorProfileController {
         try {
             const doctorId = req.params.id
             const updateData = req.body
-
+            console.log(req.file);
+            
+            // console.log("Updating doctor profile:", doctorId, updateData);
+            const file = req.file as Express.Multer.File | null
             if (!doctorId) {
                 res.status(400).json({ message: 'Doctor ID is required' })
                 return
             }
 
-            const updatedDoctor = await this.doctorProfileService.updateProfile(doctorId, updateData)
+            const updatedDoctor = await this.doctorProfileService.updateProfile(doctorId, updateData, file)
 
             res.status(200).json({
                 success: true,
@@ -44,6 +47,8 @@ export class DoctorProfileController {
                 doctor: updatedDoctor
             })
         } catch (error) {
+            console.log(error);
+            
             res.status(500).json({ message: (error as Error).message })
         }
     }

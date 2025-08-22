@@ -4,7 +4,7 @@ import { IDoctorMgtService } from '../../interfaces/IDoctorMgtServices'
 import { ICreateDoctorProfileDTO } from '../doctor/profileServices'
 import bcrypt from 'bcrypt'
 import { IDoctor } from '../../entities/doctor'
-
+import { S3Bucket } from '../../config/awsS3'
 @injectable()
 export class DoctorMgtService implements IDoctorMgtService {
     constructor(@inject('IDoctorRepository') private doctorRepo: IDoctorRepository) {}
@@ -23,12 +23,19 @@ export class DoctorMgtService implements IDoctorMgtService {
         return newDoctor
     }
 
-    async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
+    async updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>,file: Express.Multer.File): Promise<IDoctor> {
         if (data.password) {
             data.password = await bcrypt.hash(data.password, 10)
         }
+        let profileImageUrl =null
+        if (file) {
+            const s3 = new S3Bucket()
+             profileImageUrl = await s3.uploadProfilePic(file.originalname, file.buffer, file.mimetype, 'profile-pics')
+           
+        } else {
+        }
 
-        return this.doctorRepo.updateDoctor(id, data)
+        return this.doctorRepo.updateDoctor(id, data,profileImageUrl)
     }
 
     async blockDoctor(id: string): Promise<IDoctor> {

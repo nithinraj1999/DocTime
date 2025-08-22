@@ -38,6 +38,7 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(user.profileImage ?? "");
+  const [profilePic, setProfilePic] = useState<File | null>(null);
 
   const {
     register,
@@ -56,10 +57,15 @@ export default function EditProfileModal({
   const onSubmit = async (data: EditProfileFormData) => {
     setIsLoading(true);
     try {
-      const updatedUser = await updateProfile(user.id, {
-        ...data,
-        profileImage: avatarPreview ?? "",
-      });
+
+
+      const formData = new FormData();
+      if (avatarPreview) formData.append("profileImage", avatarPreview);
+      if (data.name) formData.append("name", data.name);
+      if (data.email) formData.append("email", data.email);
+      if(data.phoneNumber)formData.append("phoneNumber", data.phoneNumber);
+      if (profilePic) formData.append("profileImage", profilePic);
+      const updatedUser = await updateProfile(user.id, formData);
 
       onUpdateProfile(updatedUser.user);
       onClose();
@@ -78,6 +84,8 @@ export default function EditProfileModal({
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (!file) return;
+    setProfilePic(file)
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);

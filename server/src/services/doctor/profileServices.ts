@@ -64,12 +64,20 @@ export class DoctorProfileService implements IDoctorProfileServices {
 
         return doctor
     }
-    async updateProfile(id: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> {
+    async updateProfile(id: string, data: Partial<ICreateDoctorProfileDTO>,file: Express.Multer.File ): Promise<IDoctor> {
         const existingDoctor = await this.doctorRepository.findById(id)
         if (!existingDoctor) throw new Error('Doctor not found')
-        return this.doctorRepository.updateDoctor(id, data)
+            
+        let profileImageUrl =null
+        if (file) {
+            const s3 = new S3Bucket()
+             profileImageUrl = await s3.uploadProfilePic(file.originalname, file.buffer, file.mimetype, 'profile-pics')
+           
+        } else {
+        }
+        return this.doctorRepository.updateDoctor(id, data, profileImageUrl)
     }
-
+  
     async generateAndStoreOtp(email: string): Promise<string> {
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
         console.log('otp ---', otp)

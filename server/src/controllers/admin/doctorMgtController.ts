@@ -8,9 +8,14 @@ export class AdminDoctorMgtController {
     async createDoctor(req: Request, res: Response): Promise<void> {
         try {
             const doctorData = req.body
+
+            console.log(req.file);
+            
             const newDoctor = await this.doctorMgtService.createDoctor(doctorData)
             res.status(201).json({ success: true, data: newDoctor })
         } catch (error) {
+            console.log(error);
+            
             res.status(500).json({ success: false, message: (error as Error).message })
         }
     }
@@ -18,9 +23,11 @@ export class AdminDoctorMgtController {
     async updateDoctor(req: Request, res: Response): Promise<void> {
         try {
             const doctorId = req.params.id
+            console.log(req.file);
+            
             const doctorData = req.body
             if (doctorId) {
-                const updatedDoctor = await this.doctorMgtService.updateDoctor(doctorId, doctorData)
+                const updatedDoctor = await this.doctorMgtService.updateDoctor(doctorId, doctorData,req.file)
                 res.status(200).json({ success: true, data: updatedDoctor })
             }
         } catch (error) {

@@ -35,12 +35,12 @@ import {
 } from "@/components/ui/form";
 import { IDoctor } from "@/types/patients";
 import { specialties } from "@/constants/constants";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Camera,
+} from "lucide-react";
 
-// Specialty type definition
-type Specialty = {
-  name: string;
-  subSpecialties: string[];
-};
+
 
 // Split the schema into individual tab schemas for step validation
 const createBasicInfoSchema = z
@@ -195,7 +195,20 @@ export function DoctorFormModal({
   const [activeTab, setActiveTab] = useState("basic");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedExpertise, setSelectedExpertise] = useState<string | null>(null);
-
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | ArrayBuffer | null>(null);
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    console.log("lllllllll,.....",file);
+    if(file)setProfileImage(file);
+    // if (file) {
+    //   const reader = new FileReader();
+    //   reader.onload = (e) => {
+    //     setAvatarPreview(e.target?.result as string);
+    //   };
+    //   reader.readAsDataURL(file);
+    // }
+  };
   // Create different schemas for create and edit modes
   const createDoctorSchema = createBasicInfoSchema
     .merge(professionalSchema)
@@ -371,7 +384,11 @@ export function DoctorFormModal({
   }, [doctor, form]);
 
   const onSubmit = (data: any) => {
-    onSave(data);
+    console.log("....data.......", data);
+    const dataToSubmit = { ...data, profileImage: profileImage };
+    console.log("dataToSubmit....", dataToSubmit);
+
+    onSave(dataToSubmit);
     form.reset();
   };
 
@@ -820,22 +837,35 @@ export function DoctorFormModal({
                       </div>
                     )}
 
-                    <FormField
-                      control={form.control}
-                      name="profileImage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Profile Image URL (Optional)</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://example.com/image.jpg"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+         <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={ doctor?.profileImage} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                      {doctor?.fullName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <label
+                    htmlFor="doctor-avatar-upload"
+                    className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                  >
+                    <Camera className="w-4 h-4 text-white" />
+                    <input
+                      id="doctor-avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
                     />
+                  </label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Click camera to change profile picture
+                </p>
+              </div>
 
                     <FormField
                       control={form.control}
