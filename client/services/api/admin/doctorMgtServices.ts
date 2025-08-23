@@ -1,7 +1,7 @@
 import apiClient from "@/lib/apiClient";
 import { IDoctor } from "@/types/patients";
 
-export async function createDoctor(payload: IDoctor) {
+export async function createDoctor(payload: FormData) {
   const res = await apiClient.post(`/admin/doctor-mgt/doctor`, payload,{
     headers: {
       "Content-Type": "multipart/form-data"

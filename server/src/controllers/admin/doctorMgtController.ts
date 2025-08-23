@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { inject, injectable } from 'tsyringe'
 import { IDoctorMgtService } from '../../interfaces/IDoctorMgtServices'
+
 @injectable()
 export class AdminDoctorMgtController {
     constructor(@inject('IDoctorMgtService') private doctorMgtService: IDoctorMgtService) {}
@@ -10,8 +11,9 @@ export class AdminDoctorMgtController {
             const doctorData = req.body
 
             console.log(req.file);
-            
-            const newDoctor = await this.doctorMgtService.createDoctor(doctorData)
+            const file = req.file || null
+
+            const newDoctor = await this.doctorMgtService.createDoctor(doctorData, file)
             res.status(201).json({ success: true, data: newDoctor })
         } catch (error) {
             console.log(error);
@@ -37,29 +39,29 @@ export class AdminDoctorMgtController {
         }
     }
 
-    async blockDoctor(req: Request, res: Response): Promise<void> {
-        try {
-            const doctorId = req.params.id
-            if (doctorId) {
-                const blockedDoctor = await this.doctorMgtService.blockDoctor(doctorId)
-                res.status(200).json({ success: true, data: blockedDoctor })
-            }
-        } catch (error) {
-            res.status(500).json({ success: false, message: (error as Error).message })
-        }
-    }
+    // async blockDoctor(req: Request, res: Response): Promise<void> {
+    //     try {
+    //         const doctorId = req.params.id
+    //         if (doctorId) {
+    //             const blockedDoctor = await this.doctorMgtService.blockDoctor(doctorId)
+    //             res.status(200).json({ success: true, data: blockedDoctor })
+    //         }
+    //     } catch (error) {
+    //         res.status(500).json({ success: false, message: (error as Error).message })
+    //     }
+    // }
 
-    async unblockDoctor(req: Request, res: Response): Promise<void> {
-        try {
-            const doctorId = req.params.id
-            if (doctorId) {
-                const unblockedDoctor = await this.doctorMgtService.unblockDoctor(doctorId)
-                res.status(200).json({ success: true, data: unblockedDoctor })
-            }
-        } catch (error) {
-            res.status(500).json({ success: false, message: (error as Error).message })
-        }
-    }
+    // async unblockDoctor(req: Request, res: Response): Promise<void> {
+    //     try {
+    //         const doctorId = req.params.id
+    //         if (doctorId) {
+    //             const unblockedDoctor = await this.doctorMgtService.unblockDoctor(doctorId)
+    //             res.status(200).json({ success: true, data: unblockedDoctor })
+    //         }
+    //     } catch (error) {
+    //         res.status(500).json({ success: false, message: (error as Error).message })
+    //     }
+    // }
 
     async getAllDoctors(req: Request, res: Response): Promise<void> {
         try {

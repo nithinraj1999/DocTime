@@ -24,25 +24,26 @@ import { updateDoctor } from "@/services/api/admin/doctorMgtServices";
 export default function DoctorManagement() {
   const [doctors, setDoctors] = useState<IDoctor[]>([]);
 
-useEffect(() => {
-  async function fetchDoctors() {
-    const response = await getAllDoctors();
-    console.log(response.data);
-    
-    if(response.success) {
-      const doctorsWithNumericFees = response.data.map((doctor:any) => ({
-        ...doctor,
-        consultationFees: doctor.consultationFees?.map((fee:any) => ({
-          ...fee,
-          fee: typeof fee.fee === 'string' ? parseFloat(fee.fee) : fee.fee
-        })) || []
-      }));
-      
-      setDoctors(doctorsWithNumericFees);
+  useEffect(() => {
+    async function fetchDoctors() {
+      const response = await getAllDoctors();
+      console.log(response.data);
+
+      if (response.success) {
+        const doctorsWithNumericFees = response.data.map((doctor: any) => ({
+          ...doctor,
+          consultationFees:
+            doctor.consultationFees?.map((fee: any) => ({
+              ...fee,
+              fee: typeof fee.fee === "string" ? parseFloat(fee.fee) : fee.fee,
+            })) || [],
+        }));
+
+        setDoctors(doctorsWithNumericFees);
+      }
     }
-  }
-  fetchDoctors();
-}, []);
+    fetchDoctors();
+  }, []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "ACTIVE" | "BLOCKED"
@@ -85,82 +86,162 @@ useEffect(() => {
     );
   };
 
-  const handleSaveDoctor = async(doctorData: any) => {
+  const handleSaveDoctor = async (doctorData: any) => {
     if (editingDoctor) {
       const formData = new FormData();
-  formData.append("fullName", doctorData.fullName);
-  formData.append("email", doctorData.email);
-  formData.append("password", doctorData.password);
-  formData.append("confirmPassword", doctorData.confirmPassword);
-  formData.append("gender", doctorData.gender);
-  formData.append("phoneNumber", doctorData.phoneNumber);
-  formData.append("bio", doctorData.bio || "");
-  formData.append("experience", JSON.stringify(doctorData.experience));
+      formData.append("fullName", doctorData.fullName);
+      formData.append("email", doctorData.email);
+      // formData.append("password", doctorData.password);
+      // formData.append("confirmPassword", doctorData.confirmPassword);
+      formData.append("gender", doctorData.gender);
+      formData.append("phoneNumber", doctorData.phoneNumber);
+      formData.append("bio", doctorData.bio || "");
+      formData.append("experience", JSON.stringify(doctorData.experience));
 
-  if(doctorData.profileImage)
-  formData.append("profileImage", doctorData.profileImage);
+      if (doctorData.profileImage)
+        formData.append("profileImage", doctorData.profileImage);
 
-// ✅ Arrays
-doctorData.languages.forEach((lang: string) => {
-  formData.append("languages[]", lang);
-});
+      // ✅ Arrays
+      doctorData.languages.forEach((lang: string) => {
+        formData.append("languages[]", lang);
+      });
 
-doctorData.specializations.forEach((spec: string) => {
-  formData.append("specializations[]", spec);
-});
+      doctorData.specializations.forEach((spec: string) => {
+        formData.append("specializations[]", spec);
+      });
 
-doctorData.expertiseAreas.forEach((area: string) => {
-  formData.append("expertiseAreas[]", area);
-});
+      doctorData.expertiseAreas.forEach((area: string) => {
+        formData.append("expertiseAreas[]", area);
+      });
 
-// ✅ Nested objects
-formData.append(
-  "education",
-  JSON.stringify({
-    ...doctorData.education,
-    year: Number(doctorData.education.year),   
-  })
-);
+      // ✅ Nested objects
+      formData.append(
+        "education",
+        JSON.stringify({
+          ...doctorData.education,
+          year: Number(doctorData.education.year),
+        })
+      );
 
+      formData.append("clinics", JSON.stringify(doctorData.clinics));
+      formData.append("availability", JSON.stringify(doctorData.availability));
+      formData.append(
+        "consultationFees",
+        JSON.stringify(doctorData.consultationFees)
+      );
+      console.log("Submitting doctor data:", formData);
 
-
-formData.append("clinics", JSON.stringify(doctorData.clinics));
-formData.append("availability", JSON.stringify(doctorData.availability));
-formData.append("consultationFees", JSON.stringify(doctorData.consultationFees));
-  console.log("Submitting doctor data:", formData);
-
-      const response  = await updateDoctor(editingDoctor.id, formData);
-      if(response.success) {
+      const response = await updateDoctor(editingDoctor.id, formData);
+      if (response.success) {
         toast.success("Doctor updated successfully");
         setDoctors((prev) =>
           prev.map((doctor) =>
             doctor.id === editingDoctor.id
-              ? { ...doctor, ...doctorData, profileImage: doctorData.profileImage ? URL.createObjectURL(doctorData.profileImage) : "", updatedAt: new Date() }
+              ? {
+                  ...doctor,
+                  ...doctorData,
+                  profileImage: doctorData.profileImage
+                    ? URL.createObjectURL(doctorData.profileImage)
+                    : "",
+                  updatedAt: new Date(),
+                }
               : doctor
           )
         );
-      }else{
+      } else {
         toast.error("Failed to update doctor");
       }
     } else {
       // Create new doctor
-      const newDoctor: IDoctor = {
-        id: Date.now().toString(),
-        ...doctorData,
-        profileImage: doctorData.profileImage ? URL.createObjectURL(doctorData.profileImage) : "",
-        status: "ACTIVE" as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      const response = await createDoctor(newDoctor);
-      if(response.success){
+      // const newDoctor: any = {
+      //   id: Date.now().toString(),
+      //   ...formData,
+      //   profileImage: doctorData.profileImage
+      //     ? URL.createObjectURL(doctorData.profileImage)
+      //     : "",
+      //   status: "ACTIVE" as const,
+      //   createdAt: new Date(),
+      //   updatedAt: new Date(),
+      // };
+      const formData = new FormData();
+            formData.append("fullName", doctorData.fullName);
+      formData.append("email", doctorData.email);
+      formData.append("password", doctorData.password);
+      formData.append("confirmPassword", doctorData.confirmPassword);
+      formData.append("gender", doctorData.gender);
+      formData.append("phoneNumber", doctorData.phoneNumber);
+      formData.append("bio", doctorData.bio || "");
+      formData.append("experience", JSON.stringify(doctorData.experience));
+
+      if (doctorData.profileImage)
+        formData.append("profileImage", doctorData.profileImage);
+
+      // ✅ Arrays
+      doctorData.languages.forEach((lang: string) => {
+        formData.append("languages[]", lang);
+      });
+
+      doctorData.specializations.forEach((spec: string) => {
+        formData.append("specializations[]", spec);
+      });
+
+      doctorData.expertiseAreas.forEach((area: string) => {
+        formData.append("expertiseAreas[]", area);
+      });
+
+      // ✅ Nested objects
+      formData.append(
+        "education",
+        JSON.stringify({
+          ...doctorData.education,
+          year: Number(doctorData.education.year),
+        })
+      );
+
+      formData.append("clinics", JSON.stringify(doctorData.clinics));
+      formData.append("availability", JSON.stringify(doctorData.availability));
+      formData.append(
+        "consultationFees",
+        JSON.stringify(doctorData.consultationFees)
+      );
+      console.log("Submitting doctor data:", formData);
+
+      const response = await createDoctor(formData);
+      if (response.success) {
         toast.success("Doctor created successfully");
-      }else{
+      setDoctors((prev) => [
+        ...prev,
+        {
+          id: response.data.id, 
+          ...doctorData,
+          profileImage: doctorData.profileImage
+            ? URL.createObjectURL(doctorData.profileImage)
+            : "",
+          status: "ACTIVE",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      } else {
         toast.error("Failed to create doctor");
       }
       console.log(response);
-      
-      setDoctors((prev) => [...prev, newDoctor]);
+
+      // setDoctors((prev) =>
+      //     prev.map((doctor) =>
+      //       doctor.id === editingDoctor.id
+      //         ? {
+      //             ...doctor,
+      //             ...doctorData,
+      //             profileImage: doctorData.profileImage
+      //               ? URL.createObjectURL(doctorData.profileImage)
+      //               : "",
+      //             updatedAt: new Date(),
+      //           }
+      //         : doctor
+      //     )
+      //   );
     }
     setIsModalOpen(false);
     setEditingDoctor(null);
