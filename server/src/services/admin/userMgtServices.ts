@@ -20,10 +20,12 @@ export class UserMgtService implements IUserMgtService {
         })
         let verifiedUser = null
         if (newUser && newUser.id) {
-            verifiedUser = this.updateUser(newUser.id, { isVerified: true })
+          console.log("New user created:", newUser);
+            verifiedUser = await this.userRepo.updateProfile(newUser.id, { isVerified: true })
         }
         return verifiedUser
     }
+
 async updateUser(id: string, userData: Partial<IUser>): Promise<IUser> {
   if (userData.password) {
     userData.password = await bcrypt.hash(userData.password, 10);

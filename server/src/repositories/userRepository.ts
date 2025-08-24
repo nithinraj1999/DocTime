@@ -48,7 +48,8 @@ export class UserRepository implements IUserRepository {
 
     async updateProfile(id: string, data: Partial<IUser>): Promise<IUser> {
         const { patient, ...rest } = data
-
+        console.log("......",data);
+        
         const updateData: Prisma.UserUpdateInput = {
             ...rest,
             ...(patient && {
@@ -58,7 +59,7 @@ export class UserRepository implements IUserRepository {
                     }
                 }
             })
-        }
+        } 
 
         const updatedUser = await this.prisma.user.update({
             where: { id },

@@ -12,8 +12,8 @@ export class PatientController {
     async createPatient(req: Request, res: Response): Promise<void> {
         try {
             const patientData = req.body
-            console.log(patientData);
-            
+            console.log(patientData)
+
             const newPatient = await this.patientServices.createPatient(patientData)
             res.status(201).json({ success: true, data: newPatient })
         } catch (error: any) {
@@ -49,13 +49,14 @@ export class PatientController {
                 return
             }
             const patients = await this.patientServices.getPatientByUserId(userId)
+            console.log(patients)
 
             if (!patients || patients.length === 0) {
-                res.status(404).json({ success: false, message: 'No patients found' })
+                res.status(200).json({ success: true, patients: [] })
                 return
             }
 
-            res.status(200).json({ success: true, data: patients })
+            res.status(200).json({ success: true, patients: patients })
         } catch (error: any) {
             res.status(500).json({ success: false, message: error.message })
         }

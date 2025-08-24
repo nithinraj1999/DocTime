@@ -78,9 +78,9 @@ export default function DoctorManagement() {
       prev.map((doctor) =>
         doctor.id === doctorId
           ? {
-              ...doctor,
-              status: doctor.status === "ACTIVE" ? "BLOCKED" : "ACTIVE",
-            }
+            ...doctor,
+            status: doctor.status === "ACTIVE" ? "BLOCKED" : "ACTIVE",
+          }
           : doctor
       )
     );
@@ -138,13 +138,11 @@ export default function DoctorManagement() {
           prev.map((doctor) =>
             doctor.id === editingDoctor.id
               ? {
-                  ...doctor,
-                  ...doctorData,
-                  profileImage: doctorData.profileImage
-                    ? URL.createObjectURL(doctorData.profileImage)
-                    : "",
-                  updatedAt: new Date(),
-                }
+                ...doctor,
+                ...doctorData,
+                profileImage: response.data.profileImage,
+                updatedAt: new Date(),
+              }
               : doctor
           )
         );
@@ -164,7 +162,7 @@ export default function DoctorManagement() {
       //   updatedAt: new Date(),
       // };
       const formData = new FormData();
-            formData.append("fullName", doctorData.fullName);
+      formData.append("fullName", doctorData.fullName);
       formData.append("email", doctorData.email);
       formData.append("password", doctorData.password);
       formData.append("confirmPassword", doctorData.confirmPassword);
@@ -209,19 +207,19 @@ export default function DoctorManagement() {
       const response = await createDoctor(formData);
       if (response.success) {
         toast.success("Doctor created successfully");
-      setDoctors((prev) => [
-        ...prev,
-        {
-          id: response.data.id, 
-          ...doctorData,
-          profileImage: doctorData.profileImage
-            ? URL.createObjectURL(doctorData.profileImage)
-            : "",
-          status: "ACTIVE",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
+        setDoctors((prev) => [
+          ...prev,
+          {
+            id: response.data.id,
+            ...doctorData,
+            profileImage: doctorData.profileImage
+              ? URL.createObjectURL(doctorData.profileImage)
+              : "",
+            status: "ACTIVE",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]);
 
       } else {
         toast.error("Failed to create doctor");

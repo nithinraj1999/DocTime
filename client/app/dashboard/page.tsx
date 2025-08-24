@@ -51,7 +51,13 @@ export default function Dashboard() {
     const fetchPatients = async () => {
       try {
         const data = await getPatientsByUserId(user.id);
-        setPatients(data.data);
+        console.log("data:", data);
+
+        if(data.patients){
+          setPatients(data.patients);
+        }else{
+          setPatients([]);
+        }
       } catch (error) {
         console.error("Failed to fetch patients:", error);
       } finally {

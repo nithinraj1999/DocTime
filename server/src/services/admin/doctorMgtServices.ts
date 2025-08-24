@@ -5,6 +5,7 @@ import { ICreateDoctorProfileDTO } from '../doctor/profileServices'
 import bcrypt from 'bcrypt'
 import { IDoctor } from '../../entities/doctor'
 import { S3Bucket } from '../../config/awsS3'
+
 @injectable()
 export class DoctorMgtService implements IDoctorMgtService {
     constructor(@inject('IDoctorRepository') private doctorRepo: IDoctorRepository) {}
@@ -29,6 +30,7 @@ export class DoctorMgtService implements IDoctorMgtService {
             throw new Error('Profile image upload failed')
         }
         const newDoctor = await this.doctorRepo.createProfile(data,profileImageUrl)
+        if(newDoctor)  await this.doctorRepo.updateDoctor(newDoctor.id, { isVerified: true } as any,profileImageUrl)
         return newDoctor
     }
 
