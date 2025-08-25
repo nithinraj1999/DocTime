@@ -11,6 +11,7 @@ const doctorOtpPaths = ["/auth/verify-otp"]; // doctor can access this
 
 export function middleware(req: NextRequest) {
   const userToken = req.cookies.get("accessToken")?.value;
+
   const adminToken = req.cookies.get("adminAccessToken")?.value;
   const doctorToken = req.cookies.get("doctorAccessToken")?.value;
 

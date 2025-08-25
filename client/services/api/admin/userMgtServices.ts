@@ -27,13 +27,21 @@ export interface IUser {
   updatedAt: Date | string;
 }
 
-export async function createUser (payload: UserCreatePayload) {
-    const res = await apiClient.post(`/admin/user-mgt/user`, payload);
+export async function createUser (payload: FormData) {
+    const res = await apiClient.post(`/admin/user-mgt/user`, payload,{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return res.data;
   }
 
-  export async function updateUser (id: string, payload: UserUpdatePayload) {
-    const res = await apiClient.put(`/admin/user-mgt/user/${id}`, payload);
+  export async function updateUser (id: string, payload: FormData) {
+    const res = await apiClient.put(`/admin/user-mgt/user/${id}`, payload,{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return res.data;
   }
 

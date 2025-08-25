@@ -33,6 +33,7 @@ import { IUser, useUserStore } from "@/store/userDetailStore";
 import { getPatientsByUserId } from "@/services/api/patientServices";
 import EditProfileModal from "@/components/EditUserProfileModal";
 import { getProfile } from "@/services/user/profileServices";
+import { logoutUser } from "@/services/api/authServices";
 export default function Dashboard() {
   const router = useRouter();
 
@@ -103,8 +104,8 @@ export default function Dashboard() {
     },
   ];
 
-  const handleLogout = () => {
-    // Handle logout logic
+  const handleLogout = async () => {
+    await logoutUser();
     router.push("/");
   };
 

@@ -6,5 +6,5 @@ const router = Router();
 const adminAuthController = container.resolve<AdminAuthController>('AdminAuthController')
 
 router.post('/login', (req, res) => adminAuthController.signin(req, res));
-
+router.post('/logout', (req, res) => adminAuthController.logout(req, res));
 export default router;

@@ -64,7 +64,6 @@ export class DoctorProfileController {
             }
 
             const doctorProfile = await this.doctorProfileService.getProfile(doctorId)
-            console.log(doctorProfile);
             
             res.status(200).json({
                 message: 'Doctor profile fetched successfully',

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createUser, getAllUsers } from "@/services/api/admin/userMgtServices";
-
+import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,12 +43,13 @@ import {
 import toast from "react-hot-toast";
 import { updateUser } from "@/services/api/admin/userMgtServices";
 import { blockUser,unblockUser } from "@/services/api/admin/userMgtServices";
+import { is } from "zod/v4/locales";
 export interface IUser {
   id: string;
   name: string;
   email: string;
   password: string;
-  profileImage: string | null;
+  profileImage: any;
   phoneNumber: string;
   isAdmin: boolean;
   status: "ACTIVE" | "BLOCKED";
@@ -103,6 +104,8 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
       profileImage: "",
     },
   });
+  const [avatarPreview, setAvatarPreview] = useState( "");
+  const [profilePic, setProfilePic] = useState<File | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -126,10 +129,29 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
   }, [user, form]);
 
   const onSubmit = (data: UserFormData) => {
-    onSave(data);
+    const formData = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phoneNumber: data.phoneNumber,
+      profileImage: profilePic as any,
+      isAdmin: false,
+    };
+    onSave(formData);
     form.reset();
   };
 
+  
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfilePic(file)
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -165,11 +187,13 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
+
+            {!user && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
                   <FormLabel>
                     Password {user && "(leave empty to keep current)"}
                   </FormLabel>
@@ -184,6 +208,7 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
                 </FormItem>
               )}
             />
+            )}
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -197,21 +222,32 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="profileImage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Profile Image URL (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter image URL" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-        
-         
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={avatarPreview || user?.profileImage} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+
+                </AvatarFallback>
+              </Avatar>
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+              >
+                <Camera className="w4 h-4 text-white" />
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Click the camera icon to change your profile picture
+            </p>
+          </div>         
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -308,30 +344,54 @@ const UserManagement = () => {
     try {
       if (editingUser) {
         // Update existing user
-        const response = await updateUser(editingUser.id, userData);
+        const formData = new FormData();
+console.log("user data.....",userData);
+
+formData.append("id", Date.now().toString());
+formData.append("name", userData.name);
+formData.append("email", userData.email);
+formData.append("phoneNumber", userData.phoneNumber);
+
+if (userData.profileImage) {
+  console.log("profileimage", userData.profileImage);
+
+  formData.append("profileImage", userData.profileImage);
+} else {
+  formData.append("profileImage", "");
+}
+
+        const response = await updateUser(editingUser.id, formData);
         setUsers((prev) =>
           prev.map((user) =>
             user.id === editingUser.id
-              ? { ...user, ...userData, updatedAt: new Date() }
+              ? { ...user, ...userData, profileImage: response.data.profileImage, updatedAt: new Date() }
               : user
           )
         );
       } else {
         // Create new user
-        const newUser: IUser = {
-          id: Date.now().toString(),
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          phoneNumber: userData.phoneNumber,
-          isAdmin: userData.isAdmin,
-          status: "ACTIVE",
-          isVerified: false,
-          profileImage: userData.profileImage || null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        const response = await createUser(newUser);
+const formData = new FormData();
+console.log("user data.....",userData);
+
+formData.append("id", Date.now().toString());
+formData.append("name", userData.name);
+formData.append("email", userData.email);
+formData.append("password", userData.password);
+formData.append("phoneNumber", userData.phoneNumber);
+formData.append("isAdmin", String(userData.isAdmin));
+formData.append("status", "ACTIVE");
+formData.append("isVerified", "false");
+formData.append("createdAt", new Date().toISOString());
+formData.append("updatedAt", new Date().toISOString());
+
+if (userData.profileImage) {
+  console.log("profileimage", userData.profileImage);
+
+  formData.append("profileImage", userData.profileImage);
+} else {
+  formData.append("profileImage", "");
+}
+        const response = await createUser(formData);
         if (response?.data) {
           const savedUser: IUser = {
             ...response.data,

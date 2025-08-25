@@ -8,7 +8,9 @@ export class AdminUserMgtController {
     async createUser(req: Request, res: Response): Promise<void> {
         try {
             const userData = req.body
-            const newUser = await this.userMgtService.createNewUser(userData)
+            console.log(".file...",req.file);
+            const file = req.file
+            const newUser = await this.userMgtService.createNewUser(userData,file)
             res.status(201).json({ success: true, data: newUser })
         } catch (error) {
             res.status(500).json({ success: false, message: (error as Error).message })
@@ -18,9 +20,10 @@ export class AdminUserMgtController {
     async updateUser(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.params.id
+            const file = req.file
             const userData = req.body
             if(userId){
-            const updatedUser = await this.userMgtService.updateUser(userId, userData)
+            const updatedUser = await this.userMgtService.updateUser(userId, userData,file)
             res.status(200).json({ success: true, data: updatedUser })
         }
     } catch (error) {

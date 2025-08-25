@@ -45,3 +45,31 @@ export async function login(data:{email:string,password:string}) {
   }
 } 
   
+
+export async function logoutUser() {
+  try {
+    const res = await apiClient.post('/auth/logout');
+    return res;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to logout");
+  }
+}
+
+
+export async function forgetPassword(data: {email: string}) {
+  try {
+    const res = await apiClient.post('/auth/forgot-password', data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to send reset link");
+  }
+}
+
+export async function resetPassword(data: {email: string |null,newPassword:string,confirmPassword:string}) {
+  try {
+    const res = await apiClient.post('/auth/reset-password', data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to send reset link");
+  }
+}

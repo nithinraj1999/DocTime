@@ -48,4 +48,27 @@ export class DoctorAuthController {
         const resend = await this.authService.resendOtp(email)
         res.json({ success: true, message: 'OTP resend' })
     }
+
+    async logout(req: Request, res: Response): Promise<void> {
+        res.clearCookie('doctorAccessToken')
+        res.json({ success: true, message: 'User logged out successfully' })
+    }
+
+    async forgotPassword(req: Request, res: Response): Promise<void> {
+        const { email } = req.body
+        const result = await this.authService.forgotPassword(email)
+        res.json(result)
+    }
+
+    async resetPassword(req: Request, res: Response): Promise<void> {
+        const { email, newPassword, confirmPassword } = req.body
+
+        if (newPassword !== confirmPassword) {
+            res.status(400).json({ success: false, message: 'Passwords do not match' })
+            return
+        }
+
+        const result = await this.authService.resetPassword(email, newPassword)
+        res.json({ success: true })
+    }
 }

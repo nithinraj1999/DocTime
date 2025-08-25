@@ -27,4 +27,9 @@ export class AdminAuthController {
             res.status(500).json({ message: (error as Error).message })
         }
     }
+
+    async logout(req: Request, res: Response): Promise<void> {
+        res.clearCookie('adminAccessToken')
+        res.json({ success: true, message: 'User logged out successfully' })
+    }
 }

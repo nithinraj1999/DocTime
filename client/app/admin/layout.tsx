@@ -26,7 +26,8 @@ import {
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logoutAdmin } from "@/services/api/admin/adminAuthServices";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -41,13 +42,33 @@ const navigation = [
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
+// List of auth routes that should NOT use the admin layout
+const AUTH_ROUTES = [
+  '/admin/auth/login',
+  '/admin/auth/register',
+  '/admin/auth/forgot-password',
+  '/admin/auth/reset-password'
+];
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-
-  const handleLogout = () => {
-    window.location.href = "/admin/auth/login";
+  const router = useRouter();
+  
+  const handleLogout = async () => {
+    await logoutAdmin();
+    router.push("/admin/auth/login");
   };
+
+  // Check if current route is an auth route
+  const isAuthRoute = pathname && AUTH_ROUTES.some(route => 
+    pathname.startsWith(route)
+  );
+
+  // If it's an auth route, return children without admin layout
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -15,8 +15,6 @@ export class DoctorAuthService implements IDoctorAuthService {
 
     async signin(email: string, password: string): Promise<Partial<IDoctor> | null> {
         const user = await this.doctorRepo.findVerifiedByEmail(email)
-        console.log("....",user);
-
         if (!user) {
             throw new Error('User not found')
         }
@@ -42,7 +40,7 @@ export class DoctorAuthService implements IDoctorAuthService {
     async verifyOtp(email: string, otp: string): Promise<boolean> {
         console.log(email)
         const storedOtp = await redis.get(`otp:${email}`)
-if (storedOtp === otp) {
+        if (storedOtp === otp) {
             await this.doctorRepo.updateDoctorByEmail(email, { isVerified: true })
         }
         return storedOtp === otp
@@ -61,5 +59,23 @@ if (storedOtp === otp) {
         if (user.email) {
             await this.emailService.sendEmail(user.email, otp)
         }
+    }
+
+    async forgotPassword(email: string): Promise<void> {
+        const user = await this.doctorRepo.findByEmail(email)
+        if (!user) {
+            throw new Error('User with this email does not exist')
+        }
+        const resetLink = process.env.FRONTEND_ORIGIN + `/doctor/reset-password?email=${encodeURIComponent(email)}`
+        await this.emailService.sendEmailToResetPassword(email, resetLink)
+    }
+    async resetPassword(email: string, newPassword: string): Promise<Partial<IDoctor> | null> {
+        const user = await this.doctorRepo.findByEmail(email)
+        if (!user) {
+            throw new Error('User with this email does not exist')
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+        await this.doctorRepo.updateDoctorByEmail(email, { password: hashedPassword })
+        return user
     }
 }

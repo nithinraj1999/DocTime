@@ -50,7 +50,7 @@ export class UserRepository implements IUserRepository {
         const { patient, ...rest } = data
         console.log("......",data);
         
-        const updateData: Prisma.UserUpdateInput = {
+        const updateData: any = {
             ...rest,
             ...(patient && {
                 patient: {
@@ -73,7 +73,7 @@ export class UserRepository implements IUserRepository {
     async updateProfileByEmail(email: string, data: Partial<IUser>): Promise<Partial<IUser>> {
         const { patient, ...rest } = data
 
-        const updateData: Prisma.UserUpdateInput = {
+        const updateData: any = {
             ...rest,
             ...(patient && {
                 patient: {

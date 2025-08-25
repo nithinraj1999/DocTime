@@ -4,18 +4,26 @@ import bcrypt from 'bcrypt'
 import { IUser } from '../../entities/user'
 import { IUserMgtService } from '../../interfaces/IUserMgtServices'
 import { Prisma } from '@prisma/client'
-
+import { S3Bucket } from '../../config/awsS3'
 @injectable()
 export class UserMgtService implements IUserMgtService {
     constructor(@inject('IUserRepository') private userRepo: IUserRepository) {}
 
-    async createNewUser(userData: Partial<IUser>): Promise<Partial<IUser> | null> {
+    async createNewUser(userData: Partial<IUser>,file:any): Promise<Partial<IUser> | null> {
         if (!userData.email || !userData.password) {
             throw new Error('Email and password are required')
         }
         const hashedPassword = await bcrypt.hash(userData.password, 10)
+                let profileImageUrl =null
+                if (file) {
+                    const s3 = new S3Bucket()
+                     profileImageUrl = await s3.uploadProfilePic(file.originalname, file.buffer, file.mimetype, 'profile-pics')
+                   
+                } 
+        
         const newUser = await this.userRepo.create({
             ...userData,
+            profileImage: profileImageUrl,
             password: hashedPassword
         })
         let verifiedUser = null
@@ -26,15 +34,22 @@ export class UserMgtService implements IUserMgtService {
         return verifiedUser
     }
 
-async updateUser(id: string, userData: Partial<IUser>): Promise<IUser> {
+async updateUser(id: string, userData: Partial<IUser>,file:any): Promise<IUser> {
   if (userData.password) {
     userData.password = await bcrypt.hash(userData.password, 10);
   }
+                let profileImageUrl =null
+                if (file) {
+                    const s3 = new S3Bucket()
+                     profileImageUrl = await s3.uploadProfilePic(file.originalname, file.buffer, file.mimetype, 'profile-pics')
+                   
+                } 
 
   const prismaData: any = {
     ...(userData.name && { name: userData.name }),
     ...(userData.email && { email: userData.email }),
     ...(userData.password && { password: userData.password }),
+    ...(profileImageUrl && { profileImage: profileImageUrl }),
     ...(userData.status && { status: userData.status }),
     ...(userData.patient && {
       patient: {

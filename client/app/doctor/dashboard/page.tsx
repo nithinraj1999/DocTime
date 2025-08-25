@@ -15,6 +15,7 @@ import { getDoctorProfile } from "@/services/doctor/doctorProfileServices";
 import { useDoctorStore } from "@/store/doctorDetailsStore";
 import { IDoctor } from "@/types/patients";
 import DoctorEditProfileModal from "@/components/EditDoctorModal";
+import { logoutDoctor } from "@/services/doctor/doctorAuthServices";
 export default function DoctorDashboard() {
 
   const router = useRouter();
@@ -148,7 +149,8 @@ export default function DoctorDashboard() {
   };
 
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutDoctor();
     router.push("/doctor/login");
   };
 

@@ -2,10 +2,14 @@ import { Request, Response } from 'express'
 import { inject, injectable } from 'tsyringe'
 import { IAuthService } from '../../interfaces/IAuthService'
 import jwt from 'jsonwebtoken'
+import { IEmailService } from '../../config/nodeMailer'
 
 @injectable()
 export class AuthController {
-    constructor(@inject('IAuthService') private authService: IAuthService) {}
+    constructor(
+        @inject('IAuthService') private authService: IAuthService,
+        @inject('IEmailService') private emailService: IEmailService
+    ) {}
 
     async signup(req: Request, res: Response): Promise<void> {
         try {
@@ -58,5 +62,28 @@ export class AuthController {
         const { email } = req.body
         const resend = await this.authService.resendOtp(email)
         res.json({ success: true, message: 'OTP resend' })
+    }
+    async logout(req: Request, res: Response): Promise<void> {
+        res.clearCookie('accessToken')
+        res.json({ success: true, message: 'User logged out successfully' })
+    }
+
+    async forgetPassword(req: Request, res: Response): Promise<void> {
+        console.log(req.body)
+
+        const { email } = req.body
+        const result = await this.authService.forgetPassword(email)
+        res.json({ success: true, message: 'Password reset link sent', data: result })
+    }
+
+    async resetPassword(req: Request, res: Response): Promise<void> {
+        const { email, newPassword, confirmPassword } = req.body
+        console.log(req.body)
+
+        if (newPassword !== confirmPassword) {
+            res.status(400).json({ success: false, message: 'Passwords do not match' })
+            return
+        }
+
     }
 }

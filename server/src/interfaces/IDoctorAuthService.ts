@@ -3,5 +3,7 @@ export interface IDoctorAuthService {
   signin(email: string, password: string): Promise<Partial<IDoctor> | null>;
   verifyOtp(phoneNumber: string, otp: string): Promise<boolean>;
   resendOtp(email: string): Promise<void>;
+  forgotPassword(email: string): Promise<void>;
+  resetPassword(email: string, newPassword: string): Promise<Partial<IDoctor> | null>;
 }
  

@@ -92,5 +92,28 @@ const isPasswordValid = await bcrypt.compare(password, user.password)
         }
     }
 
+
+    async forgetPassword(email: string): Promise<boolean> {
+        const user = await this.userRepo.findByEmail(email, false)
+        if (!user) {
+            throw new Error('User not found')
+        }
+        const resetLink = process.env.FRONTEND_ORIGIN + `/auth/reset-password?email=${encodeURIComponent(email)}`
+        const result = await this.emailService.sendEmailToResetPassword(email, resetLink)
+
+        return true
+    }
+
+    async resetPassword(email: string, newPassword: string): Promise<Partial<IUser> | null> {
+        const user = await this.userRepo.findByEmail(email, false)
+        if (!user) {
+            throw new Error('User not found')
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10)
+        const updatedUser = await this.userRepo.updateProfileByEmail(email, { password: user.password })
+        return updatedUser
+    }
+
 }
  

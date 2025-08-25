@@ -11,10 +11,13 @@ import AdminAuthRoutes from './routes/admin/adminAuth';
 import UserMgtRoutes from './routes/admin/userMgtRoutes';
 import PatientRoutes from './routes/patients/patientRoutes';
 import DoctorMgtRoutes from './routes/admin/doctorMgtRoutes';
+import cookieParser from "cookie-parser";
+
 dotenv.config()
 
 const app = express()
 app.use(express.json())
+app.use(cookieParser())
 
 const PORT = process.env.PORT 
 
@@ -25,6 +28,7 @@ app.use(
         credentials: true,
     }) 
 )
+
 app.use('/api/auth', authRoutes);
 app.use('/api/',profileRoutes);
 app.use('/api/doctor',doctorProfileRoutes);

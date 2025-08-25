@@ -155,6 +155,7 @@ async updateDoctor(
         if (data.experience !== undefined) updateData.experience = data.experience
         if (data.status !== undefined) updateData.status = data.status
         if (data.isVerified !== undefined) updateData.isVerified = data.isVerified
+        if (data.password !== undefined) updateData.password = data.password
 
         if (data.clinics !== undefined) {
             updateData.clinics = {
