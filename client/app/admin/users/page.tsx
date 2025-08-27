@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Edit2, Shield, ShieldOff, Search, Filter } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Edit2, Shield, ShieldOff, Search, Filter, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createUser, getAllUsers } from "@/services/api/admin/userMgtServices";
-import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,8 +41,12 @@ import {
 } from "@/components/ui/form";
 import toast from "react-hot-toast";
 import { updateUser } from "@/services/api/admin/userMgtServices";
-import { blockUser,unblockUser } from "@/services/api/admin/userMgtServices";
-import { is } from "zod/v4/locales";
+import { blockUser, unblockUser } from "@/services/api/admin/userMgtServices";
+import MyPagination from "@/components/ui/myPagination";
+
+// Search Component
+import { SearchInput } from "@/components/SearchComponent";
+
 export interface IUser {
   id: string;
   name: string;
@@ -53,7 +56,7 @@ export interface IUser {
   phoneNumber: string;
   isAdmin: boolean;
   status: "ACTIVE" | "BLOCKED";
-  isVerified: boolean;
+  isVerified: boolean; 
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -104,7 +107,7 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
       profileImage: "",
     },
   });
-  const [avatarPreview, setAvatarPreview] = useState( "");
+  const [avatarPreview, setAvatarPreview] = useState("");
   const [profilePic, setProfilePic] = useState<File | null>(null);
 
   useEffect(() => {
@@ -117,7 +120,8 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
         isAdmin: user.isAdmin,
         profileImage: user.profileImage || "",
       });
-    } else
+      setAvatarPreview(user.profileImage || "");
+    } else {
       form.reset({
         name: "",
         email: "",
@@ -126,6 +130,8 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
         isAdmin: false,
         profileImage: "",
       });
+      setAvatarPreview("");
+    }
   }, [user, form]);
 
   const onSubmit = (data: UserFormData) => {
@@ -141,17 +147,17 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
     form.reset();
   };
 
-  
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setProfilePic(file)
+    setProfilePic(file);
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
       reader.readAsDataURL(file);
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -194,20 +200,18 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                  <FormLabel>
-                    Password {user && "(leave empty to keep current)"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Enter password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
             <FormField
               control={form.control}
@@ -222,32 +226,30 @@ function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
                 </FormItem>
               )}
             />
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={avatarPreview || user?.profileImage} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-
-                </AvatarFallback>
-              </Avatar>
-              <label
-                htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
-              >
-                <Camera className="w4 h-4 text-white" />
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                />
-              </label>
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage src={avatarPreview || user?.profileImage} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl"></AvatarFallback>
+                </Avatar>
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                >
+                  <Camera className="w4 h-4 text-white" />
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Click the camera icon to change your profile picture
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Click the camera icon to change your profile picture
-            </p>
-          </div>         
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -278,12 +280,25 @@ const UserManagement = () => {
   >("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<IUser | null>(null);
+  const ITEMS_PER_PAGE = 5;
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Memoize the search change handler
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  }, []);
+
+  const handleChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await getAllUsers();
+        const response = await getAllUsers(searchTerm, page, ITEMS_PER_PAGE);
         if (response?.data && Array.isArray(response.data)) {
           const usersWithDates = response.data.map((user: IUser) => ({
             ...user,
@@ -291,6 +306,7 @@ const UserManagement = () => {
             updatedAt: new Date(user.updatedAt),
           }));
           setUsers(usersWithDates);
+          setTotalItems(response.total);
         } else {
           setUsers([]);
           setError("Unexpected response from server");
@@ -302,26 +318,25 @@ const UserManagement = () => {
         setIsLoading(false);
       }
     };
-    fetchData();
-  }, []);
-
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "ALL" || user.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+    
+    // Add a debounce to prevent too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [page, searchTerm]);
 
   const handleCreateUser = () => {
     setEditingUser(null);
     setIsModalOpen(true);
   };
+  
   const handleEditUser = (user: IUser) => {
     setEditingUser(user);
     setIsModalOpen(true);
   };
+  
   const handleToggleStatus = async (userId: string) => {
     const user = users.find((u) => u.id === userId);
     if (user) {
@@ -345,20 +360,16 @@ const UserManagement = () => {
       if (editingUser) {
         // Update existing user
         const formData = new FormData();
-console.log("user data.....",userData);
+        formData.append("id", Date.now().toString());
+        formData.append("name", userData.name);
+        formData.append("email", userData.email);
+        formData.append("phoneNumber", userData.phoneNumber);
 
-formData.append("id", Date.now().toString());
-formData.append("name", userData.name);
-formData.append("email", userData.email);
-formData.append("phoneNumber", userData.phoneNumber);
-
-if (userData.profileImage) {
-  console.log("profileimage", userData.profileImage);
-
-  formData.append("profileImage", userData.profileImage);
-} else {
-  formData.append("profileImage", "");
-}
+        if (userData.profileImage) {
+          formData.append("profileImage", userData.profileImage);
+        } else {
+          formData.append("profileImage", "");
+        }
 
         const response = await updateUser(editingUser.id, formData);
         setUsers((prev) =>
@@ -370,27 +381,24 @@ if (userData.profileImage) {
         );
       } else {
         // Create new user
-const formData = new FormData();
-console.log("user data.....",userData);
+        const formData = new FormData();
+        formData.append("id", Date.now().toString());
+        formData.append("name", userData.name);
+        formData.append("email", userData.email);
+        formData.append("password", userData.password);
+        formData.append("phoneNumber", userData.phoneNumber);
+        formData.append("isAdmin", String(userData.isAdmin));
+        formData.append("status", "ACTIVE");
+        formData.append("isVerified", "false");
+        formData.append("createdAt", new Date().toISOString());
+        formData.append("updatedAt", new Date().toISOString());
 
-formData.append("id", Date.now().toString());
-formData.append("name", userData.name);
-formData.append("email", userData.email);
-formData.append("password", userData.password);
-formData.append("phoneNumber", userData.phoneNumber);
-formData.append("isAdmin", String(userData.isAdmin));
-formData.append("status", "ACTIVE");
-formData.append("isVerified", "false");
-formData.append("createdAt", new Date().toISOString());
-formData.append("updatedAt", new Date().toISOString());
-
-if (userData.profileImage) {
-  console.log("profileimage", userData.profileImage);
-
-  formData.append("profileImage", userData.profileImage);
-} else {
-  formData.append("profileImage", "");
-}
+        if (userData.profileImage) {
+          formData.append("profileImage", userData.profileImage);
+        } else {
+          formData.append("profileImage", "");
+        }
+        
         const response = await createUser(formData);
         if (response?.data) {
           const savedUser: IUser = {
@@ -399,8 +407,8 @@ if (userData.profileImage) {
             updatedAt: new Date(response.data.updatedAt),
           };
           toast.success("User saved successfully");
-          setUsers((prev) => [...prev, savedUser]);
-        }else{
+          setUsers((prev) => [savedUser, ...prev]);
+        } else {
           toast.error("Failed to save user");
         }
       }
@@ -419,6 +427,7 @@ if (userData.profileImage) {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     );
+  
   if (error)
     return (
       <div className="flex justify-center items-center h-64">
@@ -440,33 +449,11 @@ if (userData.profileImage) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" /> Status: {statusFilter}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setStatusFilter("ALL")}>
-                All Status
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("ACTIVE")}>
-                Active Only
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("BLOCKED")}>
-                Blocked Only
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu> */}
+          {/* Use the separate SearchInput component */}
+          <SearchInput 
+            searchTerm={searchTerm} 
+            onSearchChange={handleSearchChange} 
+          />
         </div>
         <Button onClick={handleCreateUser} className="flex items-center gap-2">
           <Plus className="h-4 w-4" /> Add User
@@ -481,15 +468,14 @@ if (userData.profileImage) {
               <TableHead>User</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Role</TableHead>
-              {/* <TableHead>Status</TableHead> */}
               <TableHead>Verified</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
+            {users.length > 0 ? (
+              users.map((user) => (
                 <TableRow key={user.id} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -519,15 +505,6 @@ if (userData.profileImage) {
                       {user.isAdmin ? "Admin" : "User"}
                     </Badge>
                   </TableCell>
-                  {/* <TableCell>
-                    <Badge
-                      variant={
-                        user.status === "ACTIVE" ? "default" : "destructive"
-                      }
-                    >
-                      {user.status}
-                    </Badge>
-                  </TableCell> */}
                   <TableCell>
                     <Badge variant={user.isVerified ? "default" : "secondary"}>
                       {user.isVerified ? "Verified" : "Pending"}
@@ -548,22 +525,6 @@ if (userData.profileImage) {
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      {/* <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleStatus(user.id)}
-                        className={`h-8 w-8 p-0 ${
-                          user.status === "ACTIVE"
-                            ? "text-red-600 hover:text-red-700"
-                            : "text-green-600 hover:text-green-700"
-                        }`}
-                      >
-                        {user.status === "ACTIVE" ? (
-                          <ShieldOff className="h-4 w-4" />
-                        ) : (
-                          <Shield className="h-4 w-4" />
-                        )}
-                      </Button> */}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -578,7 +539,11 @@ if (userData.profileImage) {
           </TableBody>
         </Table>
       </div>
-
+      <MyPagination
+        page={page}
+        count={Math.ceil(totalItems / ITEMS_PER_PAGE)}
+        onChange={handleChange}
+      />
       <UserFormModal
         isOpen={isModalOpen}
         onClose={() => {

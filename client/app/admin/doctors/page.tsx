@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, Edit2, Shield, ShieldOff, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,15 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
+ TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IDoctor } from "@/types/patients";
 import { DoctorFormModal } from "@/components/AdminDoctorForm";
@@ -21,47 +26,86 @@ import { createDoctor } from "@/services/api/admin/doctorMgtServices";
 import toast from "react-hot-toast";
 import { getAllDoctors } from "@/services/api/admin/doctorMgtServices";
 import { updateDoctor } from "@/services/api/admin/doctorMgtServices";
+import MyPagination from "@/components/ui/myPagination";
+
+// Search Component
+interface SearchInputProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  placeholder?: string;
+}
+
+const SearchInput = ({ searchTerm, onSearchChange, placeholder = "Search doctors..." }: SearchInputProps) => {
+  return (
+    <div className="relative flex-1 max-w-sm">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <Input
+        placeholder={placeholder}
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="pl-10"
+      />
+    </div>
+  );
+};
+
 export default function DoctorManagement() {
   const [doctors, setDoctors] = useState<IDoctor[]>([]);
-
-  useEffect(() => {
-    async function fetchDoctors() {
-      const response = await getAllDoctors();
-      console.log(response.data);
-
-      if (response.success) {
-        const doctorsWithNumericFees = response.data.map((doctor: any) => ({
-          ...doctor,
-          consultationFees:
-            doctor.consultationFees?.map((fee: any) => ({
-              ...fee,
-              fee: typeof fee.fee === "string" ? parseFloat(fee.fee) : fee.fee,
-            })) || [],
-        }));
-
-        setDoctors(doctorsWithNumericFees);
-      }
-    }
-    fetchDoctors();
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "ACTIVE" | "BLOCKED"
   >("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<IDoctor | null>(null);
+  const ITEMS_PER_PAGE = 4;
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const filteredDoctors = doctors.filter((doctor) => {
-    const matchesSearch =
-      doctor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specializations.some((spec) =>
-        spec.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    const matchesStatus =
-      statusFilter === "ALL" || doctor.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Memoize the search change handler
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
+    setPage(1); // Reset to first page when search changes
+  }, []);
+
+  useEffect(() => {
+    async function fetchDoctors() {
+      try {
+        setIsLoading(true);
+        const response = await getAllDoctors(searchTerm, page, ITEMS_PER_PAGE);
+        console.log(response.data);
+
+        if (response.success) {
+          const doctorsWithNumericFees = response.data.map((doctor: any) => ({
+            ...doctor,
+            consultationFees:
+              doctor.consultationFees?.map((fee: any) => ({
+                ...fee,
+                fee: typeof fee.fee === "string" ? parseFloat(fee.fee) : fee.fee,
+              })) || [],
+          }));
+
+          setDoctors(doctorsWithNumericFees);
+          setTotalItems(response.total );
+        } else {
+          setError("Failed to fetch doctors");
+        }
+      } catch (err) {
+        setError("Failed to fetch doctors");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    // Add a debounce to prevent too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchDoctors();
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, page]);
 
   const handleCreateDoctor = () => {
     setEditingDoctor(null);
@@ -91,8 +135,6 @@ export default function DoctorManagement() {
       const formData = new FormData();
       formData.append("fullName", doctorData.fullName);
       formData.append("email", doctorData.email);
-      // formData.append("password", doctorData.password);
-      // formData.append("confirmPassword", doctorData.confirmPassword);
       formData.append("gender", doctorData.gender);
       formData.append("phoneNumber", doctorData.phoneNumber);
       formData.append("bio", doctorData.bio || "");
@@ -151,16 +193,6 @@ export default function DoctorManagement() {
       }
     } else {
       // Create new doctor
-      // const newDoctor: any = {
-      //   id: Date.now().toString(),
-      //   ...formData,
-      //   profileImage: doctorData.profileImage
-      //     ? URL.createObjectURL(doctorData.profileImage)
-      //     : "",
-      //   status: "ACTIVE" as const,
-      //   createdAt: new Date(),
-      //   updatedAt: new Date(),
-      // };
       const formData = new FormData();
       formData.append("fullName", doctorData.fullName);
       formData.append("email", doctorData.email);
@@ -208,8 +240,7 @@ export default function DoctorManagement() {
       if (response.success) {
         toast.success("Doctor created successfully");
         setDoctors((prev) => [
-          ...prev,
-          {
+           {
             id: response.data.id,
             ...doctorData,
             profileImage: doctorData.profileImage
@@ -219,66 +250,56 @@ export default function DoctorManagement() {
             createdAt: new Date(),
             updatedAt: new Date(),
           },
+          ...prev
+         
         ]);
 
       } else {
         toast.error("Failed to create doctor");
       }
       console.log(response);
-
-      // setDoctors((prev) =>
-      //     prev.map((doctor) =>
-      //       doctor.id === editingDoctor.id
-      //         ? {
-      //             ...doctor,
-      //             ...doctorData,
-      //             profileImage: doctorData.profileImage
-      //               ? URL.createObjectURL(doctorData.profileImage)
-      //               : "",
-      //             updatedAt: new Date(),
-      //           }
-      //         : doctor
-      //     )
-      //   );
     }
     setIsModalOpen(false);
     setEditingDoctor(null);
   };
+
+  const handleChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-500 text-center p-4 rounded-lg bg-red-50">
+          {error}
+          <Button
+            variant="outline"
+            className="mt-2"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
 
   return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search doctors..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Status: {statusFilter}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setStatusFilter("ALL")}>
-                All Status
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("ACTIVE")}>
-                Active Only
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("BLOCKED")}>
-                Blocked Only
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu> */}
+          {/* Use the separate SearchInput component */}
+          <SearchInput 
+            searchTerm={searchTerm} 
+            onSearchChange={handleSearchChange} 
+          />
         </div>
 
         <Button
@@ -304,19 +325,20 @@ export default function DoctorManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDoctors.map((doctor) => (
-              <TableRow key={doctor.id} className="hover:bg-gray-50">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={doctor.profileImage || undefined} />
-                      <AvatarFallback>
-                        {doctor.fullName
-                          .split(" ")
-                          .slice(0, 2)
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
+            {doctors.length > 0 ? (
+              doctors.map((doctor) => (
+                <TableRow key={doctor.id} className="hover:bg-gray-50">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={doctor.profileImage || undefined} />
+                        <AvatarFallback>
+                          {doctor.fullName
+                            .split(" ")
+                            .slice(0, 2)
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium text-gray-900">
@@ -366,20 +388,6 @@ export default function DoctorManagement() {
                     )}
                   </div>
                 </TableCell>
-                {/* <TableCell>
-                  <Badge
-                    variant={
-                      doctor.status === "ACTIVE" ? "default" : "destructive"
-                    }
-                    className={
-                      doctor.status === "ACTIVE"
-                        ? "bg-green-100 text-green-800"
-                        : ""
-                    }
-                  >
-                    {doctor.status}
-                  </Badge>
-                </TableCell> */}
                 <TableCell>
                   <p className="text-sm text-gray-900">
                     {doctor.experience?.hospitals?.length || 0} hospitals
@@ -395,35 +403,27 @@ export default function DoctorManagement() {
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                    {/* <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleStatus(doctor.id)}
-                      className={`h-8 w-8 p-0 ${
-                        doctor.status === "ACTIVE"
-                          ? "text-red-600 hover:text-red-700"
-                          : "text-green-600 hover:text-green-700"
-                      }`}
-                    >
-                      {doctor.status === "ACTIVE" ? (
-                        <ShieldOff className="h-4 w-4" />
-                      ) : (
-                        <Shield className="h-4 w-4" />
-                      )}
-                    </Button> */}
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  No doctors found matching your criteria.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
-
-      {filteredDoctors.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No doctors found matching your criteria.
-        </div>
-      )}
+      
+      {/* Pagination */}
+      <MyPagination
+        page={page}
+        count={Math.ceil(totalItems / ITEMS_PER_PAGE)}
+        onChange={handleChange}
+      />
 
       {/* Doctor Form Modal */}
       <DoctorFormModal

@@ -10,14 +10,14 @@ export class AdminDoctorMgtController {
         try {
             const doctorData = req.body
 
-            console.log(req.file);
+            console.log(req.file)
             const file = req.file || null
 
             const newDoctor = await this.doctorMgtService.createDoctor(doctorData, file)
             res.status(201).json({ success: true, data: newDoctor })
         } catch (error) {
-            console.log(error);
-            
+            console.log(error)
+
             res.status(500).json({ success: false, message: (error as Error).message })
         }
     }
@@ -25,16 +25,16 @@ export class AdminDoctorMgtController {
     async updateDoctor(req: Request, res: Response): Promise<void> {
         try {
             const doctorId = req.params.id
-            console.log(req.file);
-            
+            console.log(req.file)
+
             const doctorData = req.body
             if (doctorId) {
-                const updatedDoctor = await this.doctorMgtService.updateDoctor(doctorId, doctorData,req.file)
+                const updatedDoctor = await this.doctorMgtService.updateDoctor(doctorId, doctorData, req.file)
                 res.status(200).json({ success: true, data: updatedDoctor })
             }
         } catch (error) {
-            console.log(error);
-            
+            console.log(error)
+
             res.status(500).json({ success: false, message: (error as Error).message })
         }
     }
@@ -65,8 +65,14 @@ export class AdminDoctorMgtController {
 
     async getAllDoctors(req: Request, res: Response): Promise<void> {
         try {
-            const doctors = await this.doctorMgtService.getAllDoctors()
-            res.status(200).json({ success: true, data: doctors })
+            const search = (req.query.search as string) || ''
+            const page = parseInt((req.query.page as string) || '1', 10)
+            const limit = parseInt((req.query.limit as string) || '10', 10)
+            console.log("search....", search)
+
+            const { totalDoctors, allDoctors } = await this.doctorMgtService.getAllDoctors(search, page, limit)
+
+            res.status(200).json({ success: true, data: allDoctors, total: totalDoctors })
         } catch (error) {
             res.status(500).json({ success: false, message: (error as Error).message })
         }

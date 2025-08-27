@@ -48,8 +48,8 @@ export class UserRepository implements IUserRepository {
 
     async updateProfile(id: string, data: Partial<IUser>): Promise<IUser> {
         const { patient, ...rest } = data
-        console.log("......",data);
-        
+        console.log('......', data)
+
         const updateData: any = {
             ...rest,
             ...(patient && {
@@ -59,15 +59,15 @@ export class UserRepository implements IUserRepository {
                     }
                 }
             })
-        } 
+        }
 
         const updatedUser = await this.prisma.user.update({
             where: { id },
             data: updateData,
-            include: { patient: true } 
+            include: { patient: true }
         })
 
-        return updatedUser as unknown as IUser 
+        return updatedUser as unknown as IUser
     }
 
     async updateProfileByEmail(email: string, data: Partial<IUser>): Promise<Partial<IUser>> {
@@ -94,8 +94,16 @@ export class UserRepository implements IUserRepository {
         return updatedUser as unknown as IUser
     }
 
-    async getAllUsers(): Promise<IUser[]> {
-        const users = await this.prisma.user.findMany()
-        return users
+    getAllUsers = async (search: string | null, page: number, limit: number) => {
+       return await this.prisma.user.findMany({
+            where: search ? { name: { contains: search, mode: 'insensitive' } } : {},
+            skip: (page - 1) * limit,
+            take: limit,
+            orderBy: { createdAt: 'desc' } 
+        })
+    }
+    async getTotalUsers(): Promise<number> {
+        const totalUsers = await this.prisma.user.count()
+        return totalUsers
     }
 }

@@ -57,8 +57,10 @@ export class DoctorMgtService implements IDoctorMgtService {
     //     return this.doctorRepo.updateDoctor(id, { status: 'ACTIVE' } as any)
     // }
 
-    async getAllDoctors(): Promise<IDoctor[]> {
-        return this.doctorRepo.getAllDoctors()
+    async getAllDoctors(search:string, page:number, limit:number): Promise<{ totalDoctors: number, allDoctors: IDoctor[] }> {
+        const totalDoctors = await this.doctorRepo.getTotalDoctors()
+        const allDoctors =  await this.doctorRepo.getAllDoctors(search, page, limit)
+        return { totalDoctors, allDoctors }
     }
 
     async getDoctorById(id: string): Promise<IDoctor | null> {

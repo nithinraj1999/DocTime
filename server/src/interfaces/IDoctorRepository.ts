@@ -41,6 +41,7 @@ export interface IDoctorRepository {
     
     updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>,profileImage:string|null): Promise<IDoctor>
     updateDoctorByEmail(email: string, data: Partial<ICreateDoctorProfileDTO>): Promise<IDoctor> 
-    getAllDoctors(): Promise<IDoctor[]>
+    getAllDoctors(search:string, page:number, limit:number): Promise<IDoctor[]>
     findVerifiedByEmail(email: string): Promise<IDoctor | null>
+    getTotalDoctors(): Promise<number>
 }

@@ -6,5 +6,7 @@ export interface IUserRepository {
   findById(id: string): Promise<Partial<IUser> | null>;
   updateProfile(id: string, data: Partial<IUser>): Promise<Partial<IUser>>;
   updateProfileByEmail(email: string, data: Partial<IUser>): Promise<Partial<IUser>>
-  getAllUsers(): Promise<IUser[]>;
+  getAllUsers(search:string, page:number, limit:number): Promise<IUser[]>;
+  getTotalUsers(): Promise<number>;
+  
 }

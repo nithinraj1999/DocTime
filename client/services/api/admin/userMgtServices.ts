@@ -55,8 +55,14 @@ export async function createUser (payload: FormData) {
     return res.data;
   }
 
-export async function getAllUsers (){
-    const res = await apiClient.get(`/admin/user-mgt/users`);
+export async function getAllUsers (searchTerm:string|null, page:number, ITEMS_PER_PAGE:number){
+const res = await apiClient.get("/admin/user-mgt/users/", {
+  params: {
+    search: searchTerm,   
+    page: page,
+    limit: ITEMS_PER_PAGE 
+  },
+});
     return res.data;
   }
 

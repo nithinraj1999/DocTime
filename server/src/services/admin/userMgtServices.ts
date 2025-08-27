@@ -73,7 +73,10 @@ async updateUser(id: string, userData: Partial<IUser>,file:any): Promise<IUser> 
         return this.userRepo.updateProfile(id, { status: 'ACTIVE' })
     }
 
-    async getAllUsers(): Promise<IUser[]> {
-        return this.userRepo.getAllUsers()
+    async getAllUsers(search:string, page:number, limit:number): Promise<{ totalUsers: number; allUsers: IUser[] }> {
+
+      const totalUsers = await this.userRepo.getTotalUsers()
+      const allUsers = await this.userRepo.getAllUsers(search,page,limit)
+      return { totalUsers, allUsers }
     }
 }

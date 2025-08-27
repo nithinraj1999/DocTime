@@ -182,13 +182,12 @@ async updateDoctor(
         })
     }
 
-    async getAllDoctors(): Promise<IDoctor[]> {
+    async getAllDoctors(search:string | null, page:number, limit:number): Promise<IDoctor[]> {
         return this.prisma.doctor.findMany({
-            include: {
-                clinics: true,
-                availability: true,
-                consultationFees: true
-            }
+            where: search ? { fullName: { contains: search, mode: 'insensitive' } } : {},
+            skip: (page - 1) * limit,
+            take: limit,
+            orderBy: { createdAt: 'desc' } 
         })
     }
 
@@ -197,4 +196,10 @@ async updateDoctor(
             where: { email, isVerified: true }
         })
     }
+
+    async getTotalDoctors(): Promise<number> {
+        const totalDoctors = await this.prisma.doctor.count()
+        return totalDoctors
+    }
+
 }

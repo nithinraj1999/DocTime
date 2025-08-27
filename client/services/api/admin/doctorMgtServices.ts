@@ -29,8 +29,16 @@ export async function unblockDoctor(id: string) {
   return res.data;
 }
 
-export async function getAllDoctors() {
-  const res = await apiClient.get(`/admin/doctor-mgt/doctors`);
+export async function getAllDoctors(searchTerm:string|null, page:number, ITEMS_PER_PAGE:number) {
+  console.log("search..search..", searchTerm);
+
+  const res = await apiClient.get(`/admin/doctor-mgt/doctors`, {
+    params: {
+      search:searchTerm,
+      page,
+      limit:ITEMS_PER_PAGE
+    }
+  });
   return res.data;
 }
 

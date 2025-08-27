@@ -6,7 +6,7 @@ export interface IDoctorMgtService {
     updateDoctor(id: string, data: Partial<ICreateDoctorProfileDTO>, file?: Express.Multer.File): Promise<IDoctor>
     // blockDoctor(id: string): Promise<IDoctor>
     // unblockDoctor(id: string): Promise<IDoctor>
-    getAllDoctors(): Promise<IDoctor[]>
+    getAllDoctors(search:string, page:number, limit:number): Promise<{ totalDoctors: number, allDoctors: IDoctor[] }>
     getDoctorById(id: string): Promise<IDoctor | null>
     getDoctorByEmail(email: string): Promise<IDoctor | null>
 }

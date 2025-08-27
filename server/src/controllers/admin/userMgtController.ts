@@ -57,8 +57,12 @@ export class AdminUserMgtController {
 
     async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
-            const users = await this.userMgtService.getAllUsers()
-            res.status(200).json({ success: true, data: users })
+                const search = (req.query.search as string) || "";
+    const page = parseInt((req.query.page as string) || "1", 10);
+    const limit = parseInt((req.query.limit as string) || "10", 10);
+
+            const { totalUsers, allUsers } = await this.userMgtService.getAllUsers(search, page, limit)
+            res.status(200).json({ success: true, data: allUsers, total: totalUsers })
         } catch (error) {
             res.status(500).json({ success: false, message: (error as Error).message })
         }
